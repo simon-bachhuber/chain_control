@@ -1,0 +1,4 @@
+docs/3_training_a_model_two_segments_v2.ipynb
+*.egg-info
+icon*
+__pycache__
