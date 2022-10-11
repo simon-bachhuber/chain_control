@@ -1,8 +1,8 @@
 # Chain Control (cc)
 
-<center>
+<p align="center">
 <img src="icon2.png" height="200" />
-</center>
+</p>
 
 This package provides components to 
 - simulate kinematic chains
@@ -14,9 +14,15 @@ A key concept is that models but also controllers are neural ODEs that are train
 
 ## Installation
 
+Make sure that you first fulfill the following dependencies
+- Requirements of `dm_control` under `Rendering` (https://github.com/deepmind/dm_control)
+- `RecordVideoWrapper` requires `ffmpeg` to be available in terminal
+
+### Steps
+
 - create & activate new conda environment with Python 3.9
 - git clone this repository
-- in root of this repository: pip install -e . 
+- in root of this repository (where `setup.py` is located) execute `pip install -e .`
 
 ## Documentation
 
@@ -32,7 +38,7 @@ https://github.com/MarcDiethelm/contributing
 - cc.env.
     - envs 
         
-        Contains the different simulation setups. Each setup consists of two files. `setup1.py` and `setup2.xml`
+        Contains the different simulation setups. Each setup consists of two files. `env_id.py` and `env_id.xml`
     - wrappers
 
         Contains many useful wrappers that modifies a simulation setup (or an Environment).
