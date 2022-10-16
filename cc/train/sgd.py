@@ -1,5 +1,6 @@
 from ..abstract import AbstractWrappedRHS
-import tqdm 
+from tqdm.auto import tqdm 
+from ..config import use_tqdm
 import numpy as np 
 from ..rhs.parameter import flatten_module
 from .minibatch import MiniBatchState
@@ -39,7 +40,7 @@ class SGD_Loop:
             raise Exception("No initial minibatch state")
 
 
-        pbar = tqdm.tqdm(range(steps))
+        pbar = tqdm(range(steps), disable=not use_tqdm())
         train_loss_values = []
         test_loss_values = []
         test_loss = None 

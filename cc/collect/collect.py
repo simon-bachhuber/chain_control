@@ -18,7 +18,8 @@ from ..controller import FeedforwardController
 from beartype import beartype
 import dm_env
 from acme import make_environment_spec, EnvironmentLoop
-from tqdm import tqdm 
+from tqdm.auto import tqdm 
+from ..config import use_tqdm
 
 
 
@@ -84,7 +85,7 @@ def collect_exhaust_source(
 
     N = tree_shape(source._yss)
     # collect performance of controller in environment
-    pbar = tqdm(range(N), desc="Reference Iterator")
+    pbar = tqdm(range(N), desc="Reference Iterator", disable= not use_tqdm())
     iterators = []
     for i_actor in pbar:
         source.change_reference_of_actor(i_actor)
