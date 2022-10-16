@@ -1,7 +1,8 @@
-import equinox as eqx 
-import jax.tree_util as jtu 
-import jax.numpy as jnp 
+import equinox as eqx
+import jax.numpy as jnp
+import jax.tree_util as jtu
 from acme.jax.utils import batch_concat
+
 from ..types import *
 
 

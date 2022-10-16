@@ -1,5 +1,6 @@
+import jax.random as jrand
+
 from ..types import *
-import jax.random as jrand 
 
 
 def state_init(key, state_dim):
@@ -26,19 +27,41 @@ def ABCD_init(key, state_size, input_size, output_size):
     return params 
 
 
+def Network(
+    in_size, out_size, width, depth, act_fn, act_fn_final, use_bias, use_dropout, dropout_rate, key
+):
+    layers = []
+    sizes = [in_size] + depth*[width] + [out_size]
+
+    for i, (s_in, s_out) in enumerate(zip(sizes[:-1], sizes[1:])):
+        
+        if use_dropout:
+            layers.append(eqx.nn.Dropout(dropout_rate))
+
+        key, consume = jrand.split(key)
+        layers.append(eqx.nn.Linear(s_in, s_out, use_bias, key=consume))
+
+        if i<len(sizes)-2:
+            layers.append(eqx.nn.Lambda(act_fn))
+        
+    if use_dropout:
+        layers.append(eqx.nn.Dropout(dropout_rate))
+
+    layers.append(eqx.nn.Lambda(act_fn_final))
+
+    return eqx.nn.Sequential(layers)
+
+
 def f_g_init(key: PRNGKey, c) -> Tuple[eqx.Module, eqx.Module]:
     key, c1, c2 = jrand.split(key, 3)
-
-    # TODO 
-    # c.use_bias is functionless right now 
     
-    f = eqx.nn.MLP(
+    f = Network(
         c.state_size + c.input_size, c.state_size, c.width_f, c.depth_f, 
-        c.act_fn_f, c.act_final_f, key=c1
+        c.act_fn_f, c.act_final_f, c.use_bias_f, c.use_dropout_f, c.dropout_rate_f, key=c1
     )
-    g = eqx.nn.MLP(
+    g = Network(
         c.state_size, c.output_size, c.width_g, c.depth_g, 
-        c.act_fn_g, c.act_final_g, key=c2
+        c.act_fn_g, c.act_final_g, c.use_bias_g, c.use_dropout_g, c.dropout_rate_g, key=c2
     )
     return f,g 
 

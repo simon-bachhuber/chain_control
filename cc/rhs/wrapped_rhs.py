@@ -1,12 +1,11 @@
-from ..types import *
-from ..abstract import AbstractWrappedRHS, AbstractRHS, S, X, Y 
+from ..abstract import AbstractRHS, AbstractWrappedRHS, S, S_w_key, X, Y
 from ..config import print_compile_warn
-
+from ..types import *
 
 WrappedRHS = TypeVar("WrappedRHS")
 class WrappedRHS(AbstractWrappedRHS):
     rhs: AbstractRHS
-    state: NotAParameter[S]
+    state: NotAParameter[Union[S, S_w_key]]
     input_size: int = eqx.static_field()
     output_size: int = eqx.static_field()
 
@@ -28,10 +27,11 @@ class WrappedRHS(AbstractWrappedRHS):
 
     def reset(self) -> WrappedRHS:
         # unpack 
-        init_state = self.rhs.init_state()()
-        return self._update_state(init_state)
+        new_rhs, init_state = self.rhs.init_state()
+        self = self._update_state(init_state())
+        return eqx.tree_at(lambda obj: obj.rhs, self, new_rhs)
 
-    def _update_state(self, new_state: S) -> WrappedRHS:
+    def _update_state(self, new_state: Union[S, S_w_key]) -> WrappedRHS:
         new_state = NotAParameter(new_state)
         return eqx.tree_at(lambda obj: obj.state, self, new_state)
 

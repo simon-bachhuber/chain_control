@@ -20,6 +20,7 @@ class AbstractObservationReferenceSource(ABC):
 
 
 S = TypeVar("S")
+S_w_key = Tuple[S, NotAParameter[PRNGKey]]
 X = TypeVar("X")
 Y = TypeVar("Y")
 

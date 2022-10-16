@@ -1,13 +1,10 @@
-from ..rhs.common_controller_model import (
-    rhs_state_LinearControllerModel,
-    rhs_state_NonlinearControllerModel,
-    LinearControllerModelOptions,
-    NonlinearControllerModelOptions
-)
-from ..types import *
 from ..abstract import AbstractModel, Y
+from ..rhs.common_controller_model import (LinearControllerModelOptions,
+                                           NonlinearControllerModelOptions,
+                                           rhs_state_LinearControllerModel,
+                                           rhs_state_NonlinearControllerModel)
 from ..rhs.wrapped_rhs import WrappedRHS
-
+from ..types import *
 
 LinearModelOptions = LinearControllerModelOptions
 NonlinearModelOptions = NonlinearControllerModelOptions

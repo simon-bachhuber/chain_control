@@ -1,15 +1,13 @@
-from ..rhs.common_controller_model import (
-    rhs_state_LinearControllerModel,
-    rhs_state_NonlinearControllerModel,
-    LinearControllerModelOptions,
-    NonlinearControllerModelOptions
-)
+import jax.random as jrand
+
+from ..abstract import AbstractController, AbstractRHS, X
+from ..rhs.common_controller_model import (LinearControllerModelOptions,
+                                           NonlinearControllerModelOptions,
+                                           rhs_state_LinearControllerModel,
+                                           rhs_state_NonlinearControllerModel)
+from ..rhs.wrapped_rhs import WrappedRHS
 from ..types import *
 from ..utils import batch_concat
-import jax.random as jrand 
-from ..abstract import AbstractController, X, AbstractRHS 
-from ..rhs.wrapped_rhs import WrappedRHS
-
 
 LinearControllerOptions = LinearControllerModelOptions
 NonlinearControllerOptions = NonlinearControllerModelOptions
@@ -87,9 +85,9 @@ class FeedforwardRHS(AbstractRHS):
         # state is only a counter 
         return FeedforwardCounterState(state.counter+1), self.us[state.counter[0]]
 
-    def init_state(self) -> PossibleParameter[FeedforwardCounterState]:
+    def init_state(self) -> Tuple["FeedforwardRHS", PossibleParameter[FeedforwardCounterState]]:
         # initialise counter
-        return NotAParameter(FeedforwardCounterState(jnp.array([0])))
+        return self, NotAParameter(FeedforwardCounterState(jnp.array([0])))
 
 
 class FeedforwardController(Controller):
@@ -98,6 +96,6 @@ class FeedforwardController(Controller):
         self.input_size = 0 
         self.output_size = us.shape[-1] 
         self.rhs = FeedforwardRHS(us)
-        init_state = self.rhs.init_state()
+        init_state = self.rhs.init_state()[1]
         self.state = init_state 
 
