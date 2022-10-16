@@ -1,5 +1,6 @@
 from ..types import *
 from ..abstract import AbstractWrappedRHS, AbstractRHS, S, X, Y 
+from ..config import print_compile_warn
 
 
 WrappedRHS = TypeVar("WrappedRHS")
@@ -10,10 +11,11 @@ class WrappedRHS(AbstractWrappedRHS):
     output_size: int = eqx.static_field()
 
     def __call__(self, x: PyTree) -> Tuple[WrappedRHS, PyTree]:
-        print(f"""WARNING: Object {type(self)} is being traced. 
-            If this message is display continuously then you probably forgot to compile the model or controller. 
-            This can be fixed by calling `*model/controller* = equniox.filter_jit(*model/controller*).
-            """)
+        if print_compile_warn():
+            print(f"""WARNING: Object {type(self)} is being traced. 
+                If this message is display continuously then you probably forgot to compile the model or controller. 
+                This can be fixed by calling `*model/controller* = equniox.filter_jit(*model/controller*).
+                """)
         
         x = self.preprocess_x(x)
 
