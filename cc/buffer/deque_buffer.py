@@ -202,4 +202,5 @@ class _AsyncDequeReplayBuffer(_SharedDequeReplayBuffer, AbstractReplayBuffer):
             await asyncio.sleep(0)
         self._insert(replay_element, actor_id)
 
-DequeReplayBuffer = SyncOrAsyncClass(_AsyncDequeReplayBuffer, _SyncDequeReplayBuffer)
+#DequeReplayBuffer = SyncOrAsyncClass(_AsyncDequeReplayBuffer, _SyncDequeReplayBuffer)
+DequeReplayBuffer = _SyncDequeReplayBuffer
