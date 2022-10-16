@@ -1,4 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
+
 from .types import *
 
 

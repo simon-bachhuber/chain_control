@@ -1,8 +1,10 @@
-import jax 
+import functools as ft
+
+import jax
+import jax.random as jrand
+
 from ..types import *
-import functools as ft 
-import jax.random as jrand 
-from ..utils import tree_shape, tree_index
+from ..utils import tree_index, tree_shape
 
 
 @ft.partial(jax.jit, static_argnums=(1,2))
@@ -51,10 +53,11 @@ class MiniBatch(NamedTuple):
 
 
 def minibatch(
-    key: PRNGKey = jrand.PRNGKey(1,),
+    key: PRNGKey,
     n_minibatches: int = 1, 
     axis: int = 0,
     reshuffle: bool = True,
+    tree_transform: Optional[Callable] = None 
     ):
 
     def init(tree: Tree):
@@ -86,6 +89,10 @@ def minibatch(
         i = state.i % state.n_minibatches
         
         batch_of_tree = tree_index(tree, indices[i], axis)
+
+        if tree_transform:
+            key, consume = jrand.split(key)
+            batch_of_tree = tree_transform(consume, batch_of_tree, state.minibatch_size)
 
         return MiniBatchState(
             indices, i+1, state.bs, state.n_minibatches, state.minibatch_size, key
