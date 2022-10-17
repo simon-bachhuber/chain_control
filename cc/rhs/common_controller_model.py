@@ -52,6 +52,7 @@ class NonlinearControllerModelOptions(_ControllerModelOptions):
     use_dropout_g: bool = False 
     dropout_rate_g: float = 0.5
     reset_key: bool = False 
+    input_act_fn: Callable = lambda u: u
 
 
 def rhs_state_LinearControllerModel(c: LinearControllerModelOptions):
@@ -79,7 +80,7 @@ def rhs_state_NonlinearControllerModel(c: NonlinearControllerModelOptions):
     s = c.state_init(c2, c.state_size)
     init_state = is_param(c.init_state_is_param, (s, NotAParameter(key)))
 
-    rhs = NonlinearRHS(f, g, init_state, c.integrate_method, c.reset_key)
+    rhs = NonlinearRHS(f, g, c.input_act_fn, init_state, c.integrate_method, c.reset_key)
     return rhs, guarantee_not_parameter(init_state)
 
 

@@ -35,6 +35,7 @@ class LinearRHS(AbstractRHS):
 class NonlinearRHS(AbstractRHS):
     f: eqx.Module
     g: eqx.Module
+    input_act_fn: Callable
     _init_state: PossibleParameter[S_w_key]
     method: str = eqx.static_field()
     reset_key: bool = eqx.static_field()
@@ -45,6 +46,7 @@ class NonlinearRHS(AbstractRHS):
 
         key, c1, c2 = jrand.split(key, 3)
 
+        u_tm1 = self.input_act_fn(u_tm1)
         rhs = lambda t,x: self.f(batch_concat((x, u_tm1), 0), key=c1)
         x_t = integrate(rhs, x_tm1, self.method)
         y_t = self.g(x_t, key=c2)
