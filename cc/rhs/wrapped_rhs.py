@@ -8,6 +8,8 @@ class WrappedRHS(AbstractWrappedRHS):
     state: NotAParameter[Union[S, S_w_key]]
     input_size: int = eqx.static_field()
     output_size: int = eqx.static_field()
+    preprocess_x: Callable[[PyTree], X] = eqx.static_field()
+    postprocess_y: Callable[[Y], PyTree] = eqx.static_field()
 
     def __call__(self, x: PyTree) -> Tuple[WrappedRHS, PyTree]:
         if print_compile_warn():
@@ -34,13 +36,4 @@ class WrappedRHS(AbstractWrappedRHS):
     def _update_state(self, new_state: Union[S, S_w_key]) -> WrappedRHS:
         new_state = NotAParameter(new_state)
         return eqx.tree_at(lambda obj: obj.state, self, new_state)
-
-    @staticmethod
-    def preprocess_x(x: PyTree) -> X:
-        return x 
-
-    @staticmethod
-    def postprocess_y(y: Y) -> PyTree:
-        return y 
-
         

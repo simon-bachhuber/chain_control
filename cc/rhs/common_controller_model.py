@@ -20,6 +20,8 @@ class _ControllerModelOptions:
     key: PRNGKey
     state_init: FunctionType = state_init
     init_state_is_param: bool = False 
+    preprocess_x: Callable = lambda x: x 
+    postprocess_y: Callable = lambda y: y 
 
 
 @dataclass
@@ -101,3 +103,9 @@ def LinearControllerModelOptions_FromMatlab(path_to_mat: str):
 
     return c
 
+
+def set_pre_postprocess(self, options):
+    self.preprocess_x = options.preprocess_x
+    self.postprocess_y = options.postprocess_y
+
+    

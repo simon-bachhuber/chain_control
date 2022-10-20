@@ -4,7 +4,8 @@ from ..abstract import AbstractController, AbstractRHS, X
 from ..rhs.common_controller_model import (LinearControllerModelOptions,
                                            NonlinearControllerModelOptions,
                                            rhs_state_LinearControllerModel,
-                                           rhs_state_NonlinearControllerModel)
+                                           rhs_state_NonlinearControllerModel,
+                                           set_pre_postprocess)
 from ..rhs.wrapped_rhs import WrappedRHS
 from ..types import *
 from ..utils import batch_concat
@@ -32,10 +33,8 @@ class LinearController(Controller):
         self.state = state 
         self.input_size = options.input_size
         self.output_size = options.output_size
-
-    @staticmethod
-    def preprocess_x(x: PyTree) -> X:
-        return preprocess_error_as_controller_input(x)
+        self.preprocess_x = preprocess_error_as_controller_input
+        self.postprocess_y = lambda y: y 
 
 
 def create_pi_controller(p_gain: float, i_gain: float, delta_t: float) -> LinearControllerOptions:
@@ -70,6 +69,7 @@ class NonlinearController(Controller):
         self.state = state 
         self.input_size = options.input_size
         self.output_size = options.output_size   
+        set_pre_postprocess(self, options)
 
 
 class FeedforwardCounterState(eqx.Module):
@@ -98,4 +98,6 @@ class FeedforwardController(Controller):
         self.rhs = FeedforwardRHS(us)
         init_state = self.rhs.init_state()[1]
         self.state = init_state 
+        self.preprocess_x = lambda x: x 
+        self.postprocess_y = lambda y: y 
 
