@@ -18,6 +18,7 @@ from ..controller import FeedforwardController
 from beartype import beartype
 import dm_env
 from acme import make_environment_spec, EnvironmentLoop
+from acme.utils import loggers
 from tqdm.auto import tqdm 
 from ..config import use_tqdm
 
@@ -110,7 +111,7 @@ def collect(env: dm_env.Environment, controller: AbstractController, ts: jnp.nda
     )
 
     actor = PolicyActor(policy=controller, action_spec=env.action_spec(), adder=adder)
-    loop = EnvironmentLoop(env, actor)
+    loop = EnvironmentLoop(env, actor, logger=loggers.NoOpLogger())
     loop.run_episode()
     return iterator 
 
