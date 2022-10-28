@@ -97,4 +97,3 @@ class SGD_Loop:
             test_loss_values = None 
         
         return ModelTrainTestLoss(np.array(train_loss_values), test_loss_values)
-
