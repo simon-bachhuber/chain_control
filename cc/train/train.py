@@ -48,7 +48,7 @@ def _train(module, step_fn_missing_training_options,
 
     loop = SGD_Loop(step_fn)
     losses = loop.gogogo(training_options.n_gradient_steps, module, opt_state, minibatch_state)
-    return loop._module, losses 
+    return loop._model_report.best_model(), losses, loop._model_report.best_metric()
 
 
 @beartype
