@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from types import FunctionType, SimpleNamespace
-from typing import (Any, Callable, Generic, NamedTuple, NewType, Optional,
+from typing import (Any, Generic, NamedTuple, NewType, Optional,
                     Tuple, TypeVar, Union)
+from beartype.typing import Callable
 
 import equinox as eqx
 import jax.numpy as jnp
