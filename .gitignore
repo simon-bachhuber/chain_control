@@ -2,4 +2,6 @@ docs/3_training_a_model_two_segments_v2.ipynb
 *.egg-info
 icon1.png
 __pycache__
-test.ipynb
+
+# prefix module with p_ to mark as private (to you)
+p_*.py 
