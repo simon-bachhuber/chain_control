@@ -5,3 +5,5 @@ from .delay import DelayActionWrapper
 from .replace_physics_by_model import ReplacePhysicsByModelWrapper
 from .attribute import AttributeWrapper
 from .time_limit_control_timestep import TimelimitControltimestepWrapper
+from .add_reference_and_reward import AddRefSignalRewardFnWrapper
+from .track_time import TrackTimeWrapper
