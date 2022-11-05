@@ -1,5 +1,6 @@
-from acme import core 
-import copy 
+import copy
+
+from acme import core
 
 
 def policy_for_viewer(actor: core.Actor):
@@ -8,12 +9,11 @@ def policy_for_viewer(actor: core.Actor):
 
     # TODO super hacky
     if actor._adder:
-        #print("WARNING: The `adder` has been GC. `adder` is not supported for `viewer`")
         actor._adder = None
 
     class _policy:
-        observe_first=True
-        last_action=None 
+        observe_first = True
+        last_action = None
 
         def __call__(self, ts):
 
@@ -23,14 +23,13 @@ def policy_for_viewer(actor: core.Actor):
             else:
                 # observe now from last iteration
                 actor.observe(self.last_action, next_timestep=ts)
-            
-            action = actor.select_action(ts.observation)
-            self.last_action=action
 
-            return action 
+            action = actor.select_action(ts.observation)
+            self.last_action = action
+
+            return action
 
         def reset(self):
-            self.observe_first=True
+            self.observe_first = True
 
     return _policy()
-
