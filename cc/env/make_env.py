@@ -1,10 +1,11 @@
+from typing import Optional
+
+import numpy as np
 from acme.wrappers import SinglePrecisionWrapper
 from dm_control.rl import control
 
-from ..utils import generate_ts
 from .register import _register
 from .wrappers import DelayActionWrapper, MetaDataWrapper
-from typing import Optional
 
 
 def make_env(
@@ -44,7 +45,7 @@ def make_env(
         time_limit=time_limit,
         control_timestep=control_timestep,
         delay=delay,
-        ts=generate_ts(time_limit, control_timestep),
+        ts=np.arange(time_limit, step=control_timestep),
     )
 
     # to avoid that the first .step can actually

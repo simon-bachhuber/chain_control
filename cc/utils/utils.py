@@ -104,7 +104,7 @@ def tree_index(tree, indices: jnp.ndarray, axis=0):
     return jtu.tree_map(extract_indices_of_axis, tree)
 
 
-def generate_ts(time_limit, control_timestep):
+def _generate_ts(time_limit, control_timestep):
     """Generate action sampling times
 
     Args:
