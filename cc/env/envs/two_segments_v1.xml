@@ -24,6 +24,17 @@
     <geom name="rail1" type="capsule" pos="0  .07 2" zaxis="1 0 0" size="0.02 20" material="decoration" />
     <geom name="rail2" type="capsule" pos="0 -.07 2" zaxis="1 0 0" size="0.02 20" material="decoration" />
     
+    <geom name="x-marker1" type="box" pos="-10 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker2" type="box" pos="-8 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker3" type="box" pos="-6 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker4" type="box" pos="-4 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker5" type="box" pos="-2 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker6" type="box" pos="0 0 3" size="0.1 0.2 0.2" material="self_highlight" />
+    <geom name="x-marker7" type="box" pos="2 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker8" type="box" pos="4 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker9" type="box" pos="6 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker10" type="box" pos="8 0 3" size="0.1 0.2 0.2" material="self" />
+    <geom name="x-marker11" type="box" pos="10 0 3" size="0.1 0.2 0.2" material="self" />
 
     <body name="cart" pos="0 0 2">
       <joint name="slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="1e-3"/>
