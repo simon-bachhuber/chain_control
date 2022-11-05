@@ -6,7 +6,7 @@ from dm_env import test_utils
 
 from .make_env import make_env
 
-LENGTH_ACTION_SEQUENCE = 1001
+LENGTH_ACTION_SEQUENCE = 2001
 
 
 class TestTwoSegmentsV1(test_utils.EnvironmentTestMixin, absltest.TestCase):
