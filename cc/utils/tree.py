@@ -4,12 +4,13 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
-from acme.jax.utils import (  # noqa: F401
+from acme.jax.utils import (
     add_batch_dim,
     batch_concat,
     ones_like,
     zeros_like,
 )
+from equinox import tree_equal
 
 tree_zeros_like = zeros_like
 tree_ones_like = ones_like
@@ -79,7 +80,7 @@ def tree_slice(tree, start, slice_size=1, axis=0, keepdim=False):
 
 
 @partial(jax.jit, static_argnums=(2,))
-def tree_index(tree, indices: jnp.ndarray, axis=0):
+def tree_indices(tree, indices: jnp.ndarray, axis=0):
     """Extract an array of indices in an axis for every tree-element
 
     Args:
