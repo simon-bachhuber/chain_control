@@ -1,11 +1,10 @@
 from typing import Optional
 
-import numpy as np
 from acme.wrappers import SinglePrecisionWrapper
 from dm_control.rl import control
 
 from .register import _register
-from .wrappers import DelayActionWrapper, MetaDataWrapper
+from .wrappers import DelayActionWrapper, TimelimitControltimestepWrapper
 
 
 def make_env(
@@ -15,7 +14,7 @@ def make_env(
     single_precision: Optional[bool] = True,
     delay: int = 0,
     **task_kwargs
-):
+) -> TimelimitControltimestepWrapper:
 
     if "random" not in task_kwargs:
         raise Exception(
@@ -40,12 +39,11 @@ def make_env(
         env = DelayActionWrapper(env, delay)
 
     # add some metadata
-    env = MetaDataWrapper(
+    env = TimelimitControltimestepWrapper(
         env,
         time_limit=time_limit,
         control_timestep=control_timestep,
         delay=delay,
-        ts=np.arange(time_limit, step=control_timestep),
     )
 
     # to avoid that the first .step can actually
