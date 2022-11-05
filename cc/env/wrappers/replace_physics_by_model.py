@@ -20,13 +20,9 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         self._process_obs = process_observation
         self._dummy_reward = self._environment.reward_spec().generate_value()
         self._dummy_discount = self._environment.discount_spec().generate_value()
-        self._requires_reset = True
 
     def reset(self):
-        self._requires_reset = False
-
-        # reset time
-        self._t = 0.0
+        super().reset()
 
         # reset model state
         self._model = self._model.reset()
@@ -56,14 +52,10 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
 
     def step(self, action: Union[list, np.ndarray]) -> dm_env.TimeStep:
 
-        if self._requires_reset:
+        if self.requires_reset:
             return self.reset()
 
-        if self._t < (self.time_limit - self.control_timestep - 1e-8):
-            step_type = dm_env.StepType.MID
-        else:
-            step_type = dm_env.StepType.LAST
-            self._requires_reset = True
+        ts = super().step(action)
 
         # model is a jax function, so convert to DeviceArray
         action = to_jax(action)
@@ -71,7 +63,4 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
 
         self._model, obs = eqx.filter_jit(self._model)(action)
 
-        # count up pseudo-time
-        self._t += self.control_timestep
-
-        return self._build_timestep(step_type, obs)
+        return self._build_timestep(ts.step_type, obs)
