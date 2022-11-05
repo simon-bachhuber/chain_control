@@ -1,9 +1,15 @@
 import copy
 
 from acme import core
+from dm_control.viewer import launch
+import dm_env
 
 
-def policy_for_viewer(actor: core.Actor):
+def launch_viewer(env: dm_env.Environment, actor: core.Actor):
+    return launch(env, _policy_for_viewer(actor))
+
+
+def _policy_for_viewer(actor: core.Actor):
 
     actor = copy.deepcopy(actor)
 

@@ -4,7 +4,7 @@ from acme.wrappers import EnvironmentWrapper
 
 from ...abstract import AbstractObservationReferenceSource
 from ...types import *
-from ...utils import batch_concat, idx_in_pytree
+from ...utils import batch_concat, tree_index
 from ..sample_from_spec import _spec_from_observation
 
 
@@ -18,7 +18,7 @@ class _RunningSource:
         self.reset()
 
     def get_reference_actor_at_timestep(self) -> Reference:
-        return idx_in_pytree(self._source.get_reference_actor(), self._timestep)
+        return tree_index(self._source.get_reference_actor(), self._timestep)
 
     def increase_timestep(self):
         self._timestep += 1
@@ -34,7 +34,7 @@ def default_reward_fn(obs, obs_ref):
     return (-np.mean((obs_ref - obs) ** 2)).item()
 
 
-class AddReferenceObservationWrapper(EnvironmentWrapper):
+class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
     def __init__(
         self,
         environment: dm_env.Environment,
