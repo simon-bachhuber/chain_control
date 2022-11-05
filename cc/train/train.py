@@ -1,19 +1,20 @@
-from ..buffer import ReplaySample
-from ..types import *
 from dataclasses import dataclass
-from ..abstract import AbstractController, AbstractModel
-from ..rhs.parameter import filter_module
-from ..collect.source import ObservationReferenceSource
-from .step_fn import step_fn_controller, step_fn_model
-from .sgd import SGD_Loop
 
-
-import optax 
+import optax
 from beartype import beartype
+
+from ..abstract import AbstractController, AbstractModel
+from ..buffer import ReplaySample
+from ..collect.source import ObservationReferenceSource
+from ..rhs.parameter import filter_module
+from ..types import *
+from .sgd import SGD_Loop
+from .step_fn import step_fn_controller, step_fn_model
 
 
 @dataclass
 class _TrainingOptions:
+    key: PRNGKey
     optimizer: optax.GradientTransformation
     l2_regu: float 
     n_gradient_steps: int 
@@ -25,10 +26,16 @@ class TrainingOptionsModel(_TrainingOptions):
     eval_test_loss: bool 
 
 
+def default_u_transform_factory(key):
+    return lambda u,t: u 
+
+
 @dataclass
 class TrainingOptionsController(_TrainingOptions):
     models: list[AbstractModel]
     delay: int = 0
+    u_transform_factory: Callable = default_u_transform_factory
+    tree_transform: Optional[Callable] = None 
 
 
 def _train(module, step_fn_missing_training_options, 
@@ -41,7 +48,7 @@ def _train(module, step_fn_missing_training_options,
 
     loop = SGD_Loop(step_fn)
     losses = loop.gogogo(training_options.n_gradient_steps, module, opt_state, minibatch_state)
-    return loop._module, losses 
+    return loop._model_report.best_model(), losses, loop._model_report.best_metric()
 
 
 @beartype
@@ -56,10 +63,13 @@ def train_controller(
             controller, 
             training_options.models,
             source,
+            key=training_options.key,
+            u_transform_factory=training_options.u_transform_factory,
             _lambda=training_options.l2_regu,
             optimizer=training_options.optimizer,
             delay=training_options.delay,
-            number_of_minibatches=training_options.number_of_minibatches
+            n_minibatches=training_options.number_of_minibatches,
+            tree_transform=training_options.tree_transform
         )
     
     return _train(controller, step_fn, training_options)
@@ -81,6 +91,7 @@ def train_model(
         return step_fn_model(
             model, 
             train_sample,
+            training_options.key,
             test_sample,
             training_options.l2_regu,
             training_options.optimizer,

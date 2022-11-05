@@ -1,17 +1,18 @@
-from ..types import *
-from .unroll import unroll_model, unroll_closed_loop
+import functools as ft
+
+import jax
+import jax.random as jrand
+import jax.tree_util as jtu
+import optax
+
+from ..abstract import (AbstractController, AbstractModel,
+                        AbstractObservationReferenceSource)
 from ..buffer import ReplaySample
-from .minibatch import MiniBatchState, minibatch
-from ..abstract import AbstractController, AbstractModel, AbstractObservationReferenceSource
+from ..rhs.parameter import filter_module, flatten_module
+from ..types import *
 from ..utils import to_jax
-from ..rhs.parameter import flatten_module, filter_module
-
-
-import functools as ft 
-import jax.tree_util as jtu 
-
-import jax 
-import optax 
+from .minibatch import MiniBatchState, minibatch
+from .unroll import unroll_closed_loop, unroll_model
 
 
 class ModelTrainLoss(NamedTuple):
@@ -26,6 +27,7 @@ class ModelTrainTestLoss(NamedTuple):
 def step_fn_model(
     model: AbstractModel, 
     train_sample: ReplaySample, 
+    key: PRNGKey,
     test_sample: ReplaySample = None,
     _lambda: float = 0.1, 
     optimizer = optax.adam(3e-3), 
@@ -44,7 +46,9 @@ def step_fn_model(
 
     grad_loss_fn_model = eqx.filter_value_and_grad(loss_fn_model, arg=filter_module(model))
 
-    minibatcher = minibatch(n_minibatches=number_of_minibatches)
+    key, consume = jrand.split(key)
+    # TODO key is hard coded; only to get the "0.4675"-model
+    minibatcher = minibatch(n_minibatches=number_of_minibatches, key=jrand.PRNGKey(1,))
     minibatch_state = minibatcher.init(train_sample)
 
     @eqx.filter_jit
@@ -87,21 +91,25 @@ def step_fn_controller(
     controller: AbstractController, 
     models: list[AbstractModel], 
     source: AbstractObservationReferenceSource,
+    key: PRNGKey,
+    u_transform_factory,
     merge_x_y: Callable = default_merge_x_y,
     _lambda: float = 0.1, 
     optimizer = optax.adam(3e-3), 
     delay: int = 0,
-    number_of_minibatches: int = 1
+    n_minibatches: int = 1,
+    tree_transform = None 
     ):
 
     refss: BatchedTimeSeriesOfRef = to_jax(source.get_references_for_optimisation())
-    minibatcher = minibatch(n_minibatches=number_of_minibatches)
+    key, consume = jrand.split(key)
+    minibatcher = minibatch(consume, n_minibatches, tree_transform=tree_transform)
     minibatch_state = minibatcher.init(refss)
     
 
     @eqx.filter_jit 
     @ft.partial(eqx.filter_value_and_grad, arg=filter_module(controller))
-    def grad_loss_fn_controller(controller: AbstractController, refss: BatchedTimeSeriesOfRef):
+    def grad_loss_fn_controller(controller: AbstractController, refss: BatchedTimeSeriesOfRef, key: PRNGKey):
 
         # for regularisation on parameter norm
         params = flatten_module(controller)
@@ -110,12 +118,15 @@ def step_fn_controller(
         # so to create y_0_T we only need ref_0_Tm1
         refss_0_Tm1 = jtu.tree_map(lambda arr: arr[:,:-1], refss)
 
+        # split keys for vmap
+        keys = jrand.split(key, minibatch_state.minibatch_size)
+
         if len(models)>1:
 
             yhatsss = []
             for model in models:
-                yhatss = jax.vmap(lambda refs: 
-                    unroll_closed_loop(model, controller, refs, model.y0(), merge_x_y, delay))(refss_0_Tm1)["xpos_of_segment_end"]
+                yhatss = jax.vmap(lambda refs, key: 
+                    unroll_closed_loop(model, controller, refs, model.y0(), merge_x_y, delay, u_transform_factory, key))(refss_0_Tm1, keys)["xpos_of_segment_end"]
                 yhatsss.append(yhatss)
 
             yhatsss = jnp.stack(yhatsss)
@@ -126,8 +137,8 @@ def step_fn_controller(
         else:
             model = models[0]
             yhatss = jax.vmap(
-                        lambda refs: unroll_closed_loop(model, controller, refs, model.y0(), merge_x_y, delay)
-                    ) (refss_0_Tm1)["xpos_of_segment_end"]
+                        lambda refs, key: unroll_closed_loop(model, controller, refs, model.y0(), merge_x_y, delay, u_transform_factory, key)
+                    ) (refss_0_Tm1, keys)["xpos_of_segment_end"]
             
             return jnp.mean((refss["xpos_of_segment_end"] - yhatss)**2) + _lambda*jnp.mean(params**2)
 
@@ -138,7 +149,11 @@ def step_fn_controller(
         loss = []
         for _ in range(minibatch_state.n_minibatches):
             minibatch_state, minibatch_refss = minibatcher.update(minibatch_state, refss)
-            value, grad = grad_loss_fn_controller(controller, minibatch_refss)
+            # minibatch state already carries a key 
+            key, consume = jrand.split(minibatch_state.key)
+            minibatch_state = minibatch_state._replace(key=key)
+
+            value, grad = grad_loss_fn_controller(controller, minibatch_refss, consume)
             updates, opt_state = optimizer.update(grad, opt_state)
             controller = eqx.apply_updates(controller, updates)
             loss.append(value)

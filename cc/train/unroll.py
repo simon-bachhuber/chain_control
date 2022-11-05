@@ -1,21 +1,22 @@
+import jax
+from beartype import beartype
+
+from ..abstract import AbstractController, AbstractModel, AbstractWrappedRHS
 from ..types import *
-from ..abstract import AbstractModel, AbstractController, AbstractWrappedRHS
 from ..utils import add_batch_dim, tree_concat
 
 
-from beartype import beartype
-import jax
-
-
-def initialize_closed_loop(model, controller, delay):
+def initialize_closed_loop(model, controller, delay, u_transform):
     delayed_us = jnp.zeros((delay+1, controller.output_size))
     ring_array_idx = jnp.array(0)
-    return ClosedLoop(model, controller, delayed_us, ring_array_idx, delay)
+    return ClosedLoop(model, controller, u_transform, jnp.array([0]), delayed_us, ring_array_idx, delay)
 
 
 class ClosedLoop(AbstractWrappedRHS):
     model: AbstractModel 
     controller: AbstractController
+    u_transform: eqx.Module
+    timestep: jnp.ndarray
     delayed_us: jnp.ndarray
     ring_array_idx: jnp.ndarray
     delay: int = eqx.static_field()
@@ -36,14 +37,14 @@ class ClosedLoop(AbstractWrappedRHS):
 
         # get u of index one to the right
         #u_apply = jax.lax.dynamic_index_in_dim(delayed_us, ring_array_idx)
-        u_apply = u
+        u_apply = self.u_transform(u,self.timestep)
         model, y = self.model(u_apply)
 
-        return ClosedLoop(model, controller, delayed_us, ring_array_idx, self.delay), y 
+        return ClosedLoop(model, controller, self.u_transform, self.timestep+1, delayed_us, ring_array_idx, self.delay), y 
 
     def reset(self):
         controller, model = self.controller.reset(), self.model.reset()
-        return initialize_closed_loop(model, controller, self.delay)
+        return initialize_closed_loop(model, controller, self.delay, self.u_transform)
 
 
 def _unroll_static(f, xs, merge_x_and_y, y0):
@@ -89,8 +90,10 @@ def unroll_model(model: AbstractModel, us: TimeSeriesOfAct) -> TimeSeriesOfObs:
 
 @beartype
 def unroll_closed_loop(model: AbstractModel, controller: AbstractController, 
-    refs: TimeSeriesOfRef, y0: Observation, merge_x_y, delay: int) -> TimeSeriesOfObs:
+    refs: TimeSeriesOfRef, y0: Observation, merge_x_y, delay: int, u_transform_factory: Callable, key: PRNGKey) -> TimeSeriesOfObs:
 
-    closed_loop = initialize_closed_loop(model, controller, delay)
+    u_transform = u_transform_factory(key)
+
+    closed_loop = initialize_closed_loop(model, controller, delay, u_transform)
     return TimeSeriesOfObs(unroll(closed_loop, refs, merge_x_y, y0))
 

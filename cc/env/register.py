@@ -19,7 +19,8 @@ class EnvRegisterValue:
 
 from .envs import (
     two_segments_v1,
-    two_segments_v2
+    two_segments_v2,
+    two_segments_v3
 )
 
 
@@ -34,6 +35,12 @@ _register = {
         EnvRegisterValue(
             two_segments_v2.load_physics,
             two_segments_v2.SegmentTask,
+            10.0 
+        ),
+    "two_segments_v3": 
+        EnvRegisterValue(
+            two_segments_v3.load_physics,
+            two_segments_v3.SegmentTask,
             10.0 
         ),
 }

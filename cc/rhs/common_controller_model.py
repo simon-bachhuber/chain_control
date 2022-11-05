@@ -1,12 +1,14 @@
-import jax 
-from dataclasses import dataclass 
-from .initializers import state_init, ABCD_init, f_g_init
-from .rhs import LinearRHS, LinearRHS_Params, NonlinearRHS
-from ..types import *
-import jax.random as jrand 
-from ..utils import to_jax
+from dataclasses import dataclass
+
+import jax
+import jax.random as jrand
 from scipy.io import loadmat
-from .parameter import is_param, guarantee_not_parameter
+
+from ..types import *
+from ..utils import to_jax
+from .initializers import ABCD_init, f_g_init, state_init
+from .parameter import guarantee_not_parameter, is_param
+from .rhs import LinearRHS, LinearRHS_Params, NonlinearRHS
 
 
 @dataclass
@@ -18,6 +20,8 @@ class _ControllerModelOptions:
     key: PRNGKey
     state_init: FunctionType = state_init
     init_state_is_param: bool = False 
+    preprocess_x: Callable = lambda x: x 
+    postprocess_y: Callable = lambda y: y 
 
 
 @dataclass
@@ -40,11 +44,17 @@ class NonlinearControllerModelOptions(_ControllerModelOptions):
     act_fn_f: FunctionType = jax.nn.relu
     act_final_f: FunctionType = unity
     use_bias_f: bool = True
+    use_dropout_f: bool = False 
+    dropout_rate_f: float = 0.5
     depth_g: int = 0
     width_g: int = 0
     act_fn_g: FunctionType = jax.nn.relu
     act_final_g: FunctionType = unity
     use_bias_g: bool = True
+    use_dropout_g: bool = False 
+    dropout_rate_g: float = 0.5
+    reset_key: bool = False 
+    input_act_fn: Callable = lambda u: u
 
 
 def rhs_state_LinearControllerModel(c: LinearControllerModelOptions):
@@ -68,8 +78,11 @@ def rhs_state_LinearControllerModel(c: LinearControllerModelOptions):
 def rhs_state_NonlinearControllerModel(c: NonlinearControllerModelOptions):
     key, c1, c2 = jrand.split(c.key, 3)
     f,g = f_g_init(c1, c)
-    init_state = is_param(c.init_state_is_param, c.state_init(c2, c.state_size))
-    rhs = NonlinearRHS(f, g, init_state, c.integrate_method)
+
+    s = c.state_init(c2, c.state_size)
+    init_state = is_param(c.init_state_is_param, (s, NotAParameter(key)))
+
+    rhs = NonlinearRHS(f, g, c.input_act_fn, init_state, c.integrate_method, c.reset_key)
     return rhs, guarantee_not_parameter(init_state)
 
 
@@ -90,3 +103,9 @@ def LinearControllerModelOptions_FromMatlab(path_to_mat: str):
 
     return c
 
+
+def set_pre_postprocess(self, options):
+    self.preprocess_x = options.preprocess_x
+    self.postprocess_y = options.postprocess_y
+
+    

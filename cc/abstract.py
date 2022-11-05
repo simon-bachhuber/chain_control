@@ -1,4 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
+
 from .types import *
 
 
@@ -19,6 +20,7 @@ class AbstractObservationReferenceSource(ABC):
 
 
 S = TypeVar("S")
+S_w_key = Tuple[S, NotAParameter[PRNGKey]]
 X = TypeVar("X")
 Y = TypeVar("Y")
 

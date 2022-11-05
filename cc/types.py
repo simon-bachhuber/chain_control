@@ -1,9 +1,11 @@
-from types import SimpleNamespace, FunctionType
-import equinox as eqx 
-from typing import Callable, NewType, Any, Tuple, Union, TypeVar, Optional, NamedTuple, Generic
 from collections import OrderedDict
-import jax.numpy as jnp 
+from types import FunctionType, SimpleNamespace
+from typing import (Any, Generic, NamedTuple, NewType, Optional,
+                    Tuple, TypeVar, Union)
+from beartype.typing import Callable
 
+import equinox as eqx
+import jax.numpy as jnp
 
 PyTree = Any
 PRNGKey = NewType("PRNGKey", jnp.ndarray)

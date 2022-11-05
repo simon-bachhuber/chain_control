@@ -1,10 +1,11 @@
-import jax 
-import numpy as np  
-import jax.numpy as jnp 
+import copy
 from functools import partial, reduce
-import copy 
-from acme.jax.utils import batch_concat, zeros_like, add_batch_dim
-import jax.tree_util as jtu 
+
+import jax
+import jax.numpy as jnp
+import jax.tree_util as jtu
+import numpy as np
+from acme.jax.utils import add_batch_dim, batch_concat, zeros_like, ones_like
 
 
 def to_jax(tree):

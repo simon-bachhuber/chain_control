@@ -1,15 +1,14 @@
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.gaussian_process import GaussianProcessRegressor
-import numpy as np 
+import copy
 
-import jax 
+import jax
 import jax.numpy as jnp
-import copy 
+import numpy as np
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF
 
-
+from ..abstract import AbstractObservationReferenceSource
 from ..types import *
 from ..utils import idx_in_pytree, to_numpy
-from ..abstract import AbstractObservationReferenceSource
 
 
 class ObservationReferenceSource(AbstractObservationReferenceSource):
