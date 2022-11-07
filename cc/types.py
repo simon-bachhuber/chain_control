@@ -1,11 +1,11 @@
 from collections import OrderedDict
 from types import FunctionType, SimpleNamespace
-from typing import (Any, Generic, NamedTuple, NewType, Optional,
-                    Tuple, TypeVar, Union)
-from beartype.typing import Callable
+from typing import Any, Generic, NamedTuple, NewType, Optional, Tuple, TypeVar, Union
+from beartype.typing import Iterator
 
 import equinox as eqx
 import jax.numpy as jnp
+from beartype.typing import Callable
 
 PyTree = Any
 PRNGKey = NewType("PRNGKey", jnp.ndarray)
@@ -26,17 +26,20 @@ BatchedTimeSeriesOfAct = NewType("BatchedTimeSeriesOfAct", jnp.ndarray)
 
 
 T = TypeVar("T")
+
+
 class NotAParameter(eqx.Module, Generic[T]):
     _: T
+
     def __call__(self) -> T:
         return self._
 
 
 class Parameter(eqx.Module, Generic[T]):
     _: T
+
     def __call__(self) -> T:
         return self._
 
 
 PossibleParameter = Union[Parameter[T], NotAParameter[T]]
-

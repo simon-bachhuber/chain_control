@@ -6,14 +6,14 @@ from .types import *
 class AbstractObservationReferenceSource(ABC):
     @abstractmethod
     def get_reference_actor(self) -> TimeSeriesOfRef:
-        pass 
+        pass
 
     @abstractmethod
     def get_references_for_optimisation(self) -> BatchedTimeSeriesOfRef:
-        pass 
+        pass
 
     def change_reference_of_actor(self, i: int) -> None:
-        raise NotImplementedError 
+        raise NotImplementedError
 
     def change_references_for_optimisation(self) -> None:
         raise NotImplementedError
@@ -26,45 +26,45 @@ Y = TypeVar("Y")
 
 
 AbstractRHS = TypeVar("AbstractRHS")
-class AbstractRHS(eqx.Module, ABC):
 
+
+class AbstractRHS(eqx.Module, ABC):
     @abstractmethod
     def __call__(self, state: S, x: X) -> Tuple[S, Y]:
-        pass 
+        pass
 
     @abstractmethod
     def init_state(self) -> PossibleParameter[S]:
-        pass 
+        pass
 
 
 AbstractWrappedRHS = TypeVar("AbstractWrappedRHS")
-class AbstractWrappedRHS(eqx.Module, ABC):
 
+
+class AbstractWrappedRHS(eqx.Module, ABC):
     @abstractmethod
     def __call__(self, x: PyTree) -> Tuple[AbstractWrappedRHS, PyTree]:
-        pass 
+        pass
 
     @abstractmethod
     def reset(self) -> AbstractWrappedRHS:
-        pass 
+        pass
 
-    #@abstractproperty
+    # @abstractproperty
     def input_size(self):
-        raise NotImplementedError() 
+        raise NotImplementedError()
 
-    #@abstractproperty
+    # @abstractproperty
     def output_size(self):
         raise NotImplementedError()
 
 
 class AbstractController(AbstractWrappedRHS):
-    pass 
+    pass
 
 
 class AbstractModel(AbstractWrappedRHS):
     @abstractmethod
     def y0(self) -> Observation:
-        """Initial Observation of Model
-        """
-        pass  
-
+        """Initial Observation of Model"""
+        pass
