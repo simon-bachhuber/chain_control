@@ -1,10 +1,10 @@
 import asyncio
 from abc import ABC, abstractmethod
 from collections import deque
+from typing import Iterator, Optional
 
 import ray
 
-from ..types import *
 from ..utils.ray_utils import if_ray_actor
 from .rate_limiting import AbstractRateLimiter, NoRateLimitingLimiter
 from .replay_element_sample import ReplayElement
@@ -137,11 +137,9 @@ class _ReplayBuffer:
     def _sample_ready(self) -> bool:
         if len(self) == 0:
             return False
-        elif self._sampler._episodic:
-            if not self._episode_ready:
-                return False
-        else:
-            return not self._rate_limiter.sample_block()
+        if self._sampler._episodic and not self._episode_ready:
+            return False
+        return not self._rate_limiter.sample_block()
 
     def _insert_ready(self) -> bool:
         return not self._rate_limiter.insert_block()

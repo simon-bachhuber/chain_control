@@ -1,6 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, TypeVar
 
-from .types import *
+import equinox as eqx
+
+from .types import (
+    BatchedTimeSeriesOfRef,
+    NotAParameter,
+    Observation,
+    PossibleParameter,
+    PRNGKey,
+    PyTree,
+    TimeSeriesOfRef,
+)
 
 
 class AbstractObservationReferenceSource(ABC):

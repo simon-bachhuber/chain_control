@@ -6,7 +6,7 @@ import pytest
 
 from ...utils import tree_equal
 from ..make_env import make_env, make_unwrapped_env
-from .__init__ import *
+from .__init__ import AddRefSignalRewardFnWrapper, ReplacePhysicsByModelWrapper
 from .test_add_reference_and_reward import dummy_source
 from .test_replace_physics_by_model import dummy_model
 

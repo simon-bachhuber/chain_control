@@ -4,8 +4,8 @@
 # wrapping does not alter the actual environment
 
 
-from .test_auto_reset import unroll_env1, tree_equal
-from ..make_env import make_unwrapped_env, make_env
+from ..make_env import make_env, make_unwrapped_env
+from .test_auto_reset import tree_equal, unroll_env1
 
 
 def test_tracking_time_does_not_hurt():

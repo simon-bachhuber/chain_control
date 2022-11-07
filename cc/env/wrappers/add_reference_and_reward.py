@@ -1,9 +1,11 @@
+from collections import OrderedDict
+from types import FunctionType
+
 import dm_env
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
 
 from ...abstract import AbstractObservationReferenceSource
-from ...types import *
 from ...utils import batch_concat, tree_slice
 from ..sample_from_spec import _spec_from_observation
 

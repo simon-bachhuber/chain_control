@@ -1,9 +1,12 @@
+from typing import Callable, Union
+
 import dm_env
+import equinox as eqx
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
 
 from ...abstract import AbstractModel
-from ...types import *
+from ...types import Observation
 from ...utils import to_jax, to_numpy
 
 

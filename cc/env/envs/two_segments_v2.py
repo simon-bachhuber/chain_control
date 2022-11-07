@@ -1,14 +1,14 @@
-from dm_control.rl import control
+from collections import OrderedDict
+
+import numpy as np
 from dm_control import mujoco
-from collections import OrderedDict
-import numpy as np 
-from .common import read_model, ASSETS 
-from collections import OrderedDict
+from dm_control.rl import control
+
 from ..sample_from_spec import _spec_from_observation
+from .common import ASSETS, read_model
 
 
 class SegmentPhysics(mujoco.Physics):
-
     def xpos_of_segment_end(self):
         return self.named.data.xpos["segment_end", "x"]
 
@@ -23,20 +23,19 @@ def load_physics():
 
 
 class SegmentTask(control.Task):
-
     def __init__(self, random: int = 1):
-        # seed is unused 
-        del random 
+        # seed is unused
+        del random
         super().__init__()
-        
+
     def initialize_episode(self, physics):
-        pass 
+        pass
 
     def before_step(self, action, physics: SegmentPhysics):
         physics.set_torque_of_cart(action)
 
     def after_step(self, physics):
-        pass 
+        pass
 
     def action_spec(self, physics):
         return mujoco.action_spec(physics)
@@ -44,11 +43,10 @@ class SegmentTask(control.Task):
     def get_observation(self, physics) -> OrderedDict:
         obs = OrderedDict()
         obs["xpos_of_segment_end"] = np.atleast_1d(physics.xpos_of_segment_end())
-        return obs 
+        return obs
 
     def get_reward(self, physics):
         return np.array(0.0)
 
     def observation_spec(self, physics):
         return _spec_from_observation(self.get_observation(physics))
-

@@ -1,4 +1,5 @@
 import copy
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
@@ -7,7 +8,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
 from ..abstract import AbstractObservationReferenceSource
-from ..types import *
+from ..types import BatchedTimeSeriesOfAct, BatchedTimeSeriesOfRef, TimeSeriesOfRef
 from ..utils import to_numpy, tree_slice
 
 
@@ -61,7 +62,7 @@ def draw_u_from_cosines(ts, seed):
     return np.cos(omega * ts)[:, None] * np.sqrt(freq)
 
 
-def _constant_after_transform(refs: TimeSeriesOfRef, idx, new_ts):
+def _constant_after_transform(refs: jnp.ndarray, idx, new_ts):
     N = len(new_ts) + 1
     refs_out = jnp.zeros((N, refs.shape[1]))
     refs_out = refs_out.at[:idx].set(refs[:idx])

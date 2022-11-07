@@ -1,7 +1,13 @@
 import ray
 
 
-def if_ray_actor(obj, method, *args, blocking=True, **kwargs, ):
+def if_ray_actor(
+    obj,
+    method,
+    *args,
+    blocking=True,
+    **kwargs,
+):
     method = getattr(obj, method)
     if isinstance(obj, ray.actor.ActorHandle):
         obj_ref = getattr(method, "remote")(*args, **kwargs)

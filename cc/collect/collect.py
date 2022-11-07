@@ -1,7 +1,8 @@
+from typing import Tuple, Union
+
 import dm_env
-from acme import EnvironmentLoop, make_environment_spec
+from acme import EnvironmentLoop
 from acme.utils import loggers
-from beartype import beartype
 from tqdm.auto import tqdm
 
 from ..abstract import AbstractController, AbstractModel
@@ -9,7 +10,7 @@ from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..config import use_tqdm
 from ..controller import FeedforwardController
 from ..env.wrappers import AddRefSignalRewardFnWrapper, ReplacePhysicsByModelWrapper
-from ..types import *
+from ..types import TimeSeriesOfAct
 from ..utils import to_jax, to_numpy, tree_concat, tree_shape
 from .actor import PolicyActor
 from .source import (
@@ -24,7 +25,6 @@ def concat_iterators(*iterators) -> ReplaySample:
     return tree_concat([next(iterator) for iterator in iterators], True)
 
 
-@beartype
 def collect_sample(
     env: dm_env.Environment, seeds_gp: list[int], seeds_cos: list[Union[int, float]]
 ) -> ReplaySample:
@@ -37,7 +37,6 @@ def collect_sample(
     return tree_concat([sample_gp, sample_cos], True)
 
 
-@beartype
 def collect_reference_source(
     env: dm_env.Environment,
     seeds: list[int],
@@ -53,7 +52,6 @@ def collect_reference_source(
     return source
 
 
-@beartype
 def collect_exhaust_source(
     env: dm_env.Environment,
     source: ObservationReferenceSource,
@@ -105,6 +103,8 @@ def collect_feedforward_and_make_source(
         0,
     ],
 ) -> Tuple[ObservationReferenceSource, ReplaySample]:
+
+    assert len(seeds) > 0
 
     ts = env.ts
 

@@ -23,6 +23,9 @@ class AbstractRateLimiter(ABC):
     def reset(self):
         pass
 
+    def _current_ratio(self) -> float:
+        raise NotImplementedError()
+
 
 class NoRateLimitingLimiter(AbstractRateLimiter):
     def count_sample_up(self):

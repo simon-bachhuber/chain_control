@@ -4,19 +4,14 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
-from acme.jax.utils import (
-    add_batch_dim,
-    batch_concat,
-    ones_like,
-    zeros_like,
-)
+from acme.jax.utils import add_batch_dim, batch_concat, ones_like, zeros_like
 from equinox import tree_equal
 
 tree_zeros_like = zeros_like
 tree_ones_like = ones_like
 
 
-def tree_insert_IMPURE(tree, subtree, batch_idxs: tuple[int]):
+def tree_insert_IMPURE(tree, subtree, batch_idxs: tuple[int, ...]):
     def insert(a1, a2):
         a1[batch_idxs] = a2
         return a1

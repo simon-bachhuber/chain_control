@@ -2,8 +2,6 @@ from types import SimpleNamespace
 
 import cloudpickle
 
-#### Save / Restore ####
-
 
 def load(path):
     with open(path, "rb") as file:

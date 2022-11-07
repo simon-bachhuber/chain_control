@@ -1,5 +1,3 @@
-import numpy as np
-
 from ..env.wrappers import TimelimitControltimestepWrapper
 from .adder import Adder
 from .replay_buffer import ReplayBuffer, buffer_to_iterator
@@ -24,10 +22,8 @@ def make_episodic_buffer_adder_iterator(
         ),
     )
 
-    iterator = buffer_to_iterator(
-        buffer, bs, force_batch_size
-    )
-    
+    iterator = buffer_to_iterator(buffer, bs, force_batch_size)
+
     adder = Adder(buffer)
     adder.set_actor_id(actor_id)
     return buffer, adder, iterator

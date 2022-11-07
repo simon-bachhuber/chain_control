@@ -1,8 +1,8 @@
 import copy
 
+import dm_env
 from acme import core
 from dm_control.viewer import launch
-import dm_env
 
 
 def launch_viewer(env: dm_env.Environment, actor: core.Actor):
