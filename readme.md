@@ -28,11 +28,6 @@ Make sure that you first fulfill the following dependencies
 
 Check out the five introductory notebooks located under /docs
 
-## Contributing / Pull requests
-
-For information on how to create a pull request refer to
-https://github.com/MarcDiethelm/contributing
-
 ## Modules
 
 - cc.env.
