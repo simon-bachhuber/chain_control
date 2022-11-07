@@ -1,6 +1,7 @@
-import ray 
+import ray
 
-def if_is_actor(obj, method, blocking=True, *args, **kwargs):
+
+def if_ray_actor(obj, method, *args, blocking=True, **kwargs, ):
     method = getattr(obj, method)
     if isinstance(obj, ray.actor.ActorHandle):
         obj_ref = getattr(method, "remote")(*args, **kwargs)
@@ -10,11 +11,3 @@ def if_is_actor(obj, method, blocking=True, *args, **kwargs):
             return obj_ref
     else:
         return method(*args, **kwargs)
-
-def SyncOrAsyncClass(AsyncClass, SyncClass):
-    if ray.is_initialized():
-        return ray.remote(AsyncClass)
-    else:
-        return SyncClass
-
-        

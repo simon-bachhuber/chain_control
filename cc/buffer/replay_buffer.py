@@ -2,14 +2,13 @@ import asyncio
 from abc import ABC, abstractmethod
 from collections import deque
 
-import numpy as np
-from beartype import beartype
-from beartype.typing import Iterator, Optional
+import ray
 
-from ..utils.ray_utils import SyncOrAsyncClass, if_is_actor
-from ._ring_array import RingArray
+from ..types import *
+from ..utils.ray_utils import if_ray_actor
 from .rate_limiting import AbstractRateLimiter, NoRateLimitingLimiter
-from .replay_element import ReplayElement
+from .replay_element_sample import ReplayElement
+from .ring_array import RingArray
 from .sampler import ReplaySample, Sampler
 
 
@@ -22,17 +21,11 @@ class AbstractReplayBuffer(ABC):
         return len(self)
 
     @abstractmethod
+    def reset(self):
+        pass
+
+    @abstractmethod
     def sample(self, bs: int) -> list[ReplayElement]:
-        """Accumulate the transitions then to N-Transition Experiences.
-        Pre-allocate `bs` arrays, as zeros and leave empty if a transition
-        doesn't reach back far enough
-
-        Args:
-            bs (int): _description_
-
-        Returns:
-            list[ReplayElement]: _description_
-        """
         pass
 
     @abstractmethod
@@ -42,66 +35,58 @@ class AbstractReplayBuffer(ABC):
         pass
 
 
-@beartype
 def buffer_to_iterator(
     buffer: AbstractReplayBuffer, bs: int, force_batch_size: bool = True
 ) -> Iterator[ReplaySample]:
     while True:
-        yield if_is_actor(buffer, "sample", True, bs, force_batch_size)
+        yield if_ray_actor(buffer, "sample", bs, force_batch_size, blocking=True)
 
 
-class _SharedDequeReplayBuffer:
+class _ReplayBuffer:
     def __init__(
         self,
         maxlen: int = 10_000,
         rate_limiter: AbstractRateLimiter = NoRateLimitingLimiter(),
         sampler: Optional[Sampler] = None,
     ):
-        self._deque = deque(maxlen=maxlen)
-        self._dones = RingArray(maxlen=maxlen)
-        self._weights = RingArray(maxlen=maxlen)
-
-        self.maxlen = maxlen
         self._rate_limiter = rate_limiter
-        self._last_replay_elements_by_actor_id = {}
-        self._n_inserts_guaranteed_ready = 5
         self._sampler = sampler
-        self._sample_only_dones = sampler.episodic
+        self.maxlen = maxlen
+        self.reset()
+
+    def reset(self):
+
+        self._deque = deque(maxlen=self.maxlen)
+        self._dones = RingArray(maxlen=self.maxlen)
+        self._weights = RingArray(maxlen=self.maxlen)
+
+        self._rate_limiter.reset()
+        self._last_replay_elements_by_actor_id = {}
+        self._episode_ready = False
 
     def __len__(self) -> int:
         return len(self._deque)
 
-    def _convert_deque_to_list(self) -> list[ReplayElement]:
-        return list(self._deque)
-
     def _sample(self, bs: int, force_batch_size) -> ReplaySample:
 
         self._rate_limiter.count_sample_up()
-
-        # this one calls `_convert_deque_to_list` internally
-        deque_as_list = self._async_convert_deque_to_list()
 
         # update weights
         self._weights._arr = self._sampler.update_weights_when_sampling(
             self._weights._arr
         )
 
-        weights = self._weights[:]
-
-        if self._sample_only_dones:
-            # sample only ReplayElements that are at the last timestep
-            weights *= self._dones[:]
-
-        # convert to probabilities
-        weights_that_sum_to_1 = weights / np.sum(weights)
-
         # sample indices using weights
-        idxs = self._sampler.draw_idxs_from_weights(weights_that_sum_to_1, bs)
+        idxs = self._sampler.draw_idxs_from_weights(
+            self._weights[:], self._dones[:], bs
+        )
 
         pre_alloc_bs = None
         if force_batch_size:
             pre_alloc_bs = bs
 
+        # indexing a list is faster than a deque
+        deque_as_list = list(self._deque)
         # TODO list comprehensions are kinda meh
         return self._sampler.sample([deque_as_list[idx] for idx in idxs], pre_alloc_bs)
 
@@ -120,6 +105,7 @@ class _SharedDequeReplayBuffer:
 
         # fill up the dones
         if next_timestep.last():
+            self._episode_ready = True
             self._dones.append(1.0)
         else:
             self._dones.append(0.0)
@@ -146,65 +132,44 @@ class _SharedDequeReplayBuffer:
 
         replay_element.prev = prev_replay_element
 
-        self._async_append(replay_element)
-
-    def _append(self, replay_element):
         self._deque.append(replay_element)
 
-    def _sample_ready(self, bs: int) -> bool:
-        if len(self) < bs:
+    def _sample_ready(self) -> bool:
+        if len(self) == 0:
             return False
+        elif self._sampler._episodic:
+            if not self._episode_ready:
+                return False
         else:
             return not self._rate_limiter.sample_block()
 
     def _insert_ready(self) -> bool:
-        if len(self) < self._n_inserts_guaranteed_ready:
-            return True
-        else:
-            return not self._rate_limiter.insert_block()
+        return not self._rate_limiter.insert_block()
 
 
-class _SyncDequeReplayBuffer(_SharedDequeReplayBuffer, AbstractReplayBuffer):
-    def _async_convert_deque_to_list(self):
-        # not async
-        return self._convert_deque_to_list()
-
+class ReplayBuffer(_ReplayBuffer, AbstractReplayBuffer):
     def sample(self, bs: int, force_batch_size: bool) -> list[ReplayElement]:
-        if not self._sample_ready(bs):
+        if not self._sample_ready():
             return []
         return self._sample(bs, force_batch_size)
 
-    def _async_append(self, replay_element):
-        # not async
-        self._append(replay_element)
-
     def insert(self, replay_element: ReplayElement, actor_id):
-        del actor_id
-
         if not self._insert_ready():
             return
-        self._insert(replay_element, actor_id=0)
+        self._insert(replay_element, actor_id)
 
 
-class _AsyncDequeReplayBuffer(_SharedDequeReplayBuffer, AbstractReplayBuffer):
-    def _async_convert_deque_to_list(self):
-        # not async
-        return self._convert_deque_to_list()
+@ray.remote
+class RayReplayBuffer(_ReplayBuffer, AbstractReplayBuffer):
+    def current_ratio(self):
+        return self._rate_limiter._current_ratio()
 
-    async def sample(self, bs: int) -> list[ReplayElement]:
-        while not self._sample_ready(bs):
+    async def sample(self, bs: int, force_batch_size: bool) -> list[ReplayElement]:
+        while not self._sample_ready():
             await asyncio.sleep(0)
-        return self._sample(bs)
-
-    def _async_append(self, replay_element):
-        # not async
-        self._append(replay_element)
+        return self._sample(bs, force_batch_size)
 
     async def insert(self, replay_element: ReplayElement, actor_id):
         while not self._insert_ready():
             await asyncio.sleep(0)
         self._insert(replay_element, actor_id)
-
-
-# DequeReplayBuffer = SyncOrAsyncClass(_AsyncDequeReplayBuffer, _SyncDequeReplayBuffer)
-DequeReplayBuffer = _SyncDequeReplayBuffer
