@@ -6,5 +6,5 @@ __pycache__
 .pytype*
 .pytest*
 
-# prefix module with p_ to mark as private (to you)
-p_*.py 
+# prefix module/notebook with p_ to mark as private (to you)
+p_*.*py*
