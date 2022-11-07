@@ -24,6 +24,6 @@ def make_episodic_buffer_adder_iterator(
 
     iterator = buffer_to_iterator(buffer, bs, force_batch_size)
 
-    adder = Adder(buffer)
+    adder = Adder(buffer, flush_cache_every=len(env.ts))
     adder.set_actor_id(actor_id)
     return buffer, adder, iterator
