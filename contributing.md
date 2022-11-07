@@ -22,10 +22,12 @@ pip install
 # Execution
 Run in root-dir of repo in just this order.
 
-> black && isort
+> black cc 
+
+> isort cc
 
 > flake8
 
-> pytype
+> pytype --config pytype.cfg
 
 > pytest
