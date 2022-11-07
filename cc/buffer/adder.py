@@ -17,14 +17,30 @@ class AbstractAdder(ABC):
     def add(self, action: np.ndarray, next_timestep: dm_env.TimeStep, extras: dict):
         pass
 
+    @abstractmethod
+    def reset(self):
+        pass
+
 
 class Adder(AbstractAdder):
-    def __init__(self, replay_buffer: AbstractReplayBuffer):
+    def __init__(self, replay_buffer: AbstractReplayBuffer, flush_cache_every: int = 1):
         self._replay_buffer = replay_buffer
-        self._prev_ts = None
         self._actor_id = None
+        self._flush_cache_every = flush_cache_every
         self._episode_id = -1
+        self._cache = []
+        self.reset()
+
+    def reset(self):
+        self._prev_ts = None
         self._timestep_id = 0
+
+        if len(self._cache) != 0:
+            print(
+                f"""WARNING: You have just flushed the cache of an `adder` that was not
+                 empty. It contained {len(self._cache)} `ReplayElement`(s)."""
+            )
+        self._cache = []
 
     def set_actor_id(self, actor_id: int):
         self._actor_id = actor_id
@@ -55,7 +71,17 @@ class Adder(AbstractAdder):
             extras,
         )
 
-        if_ray_actor(self._replay_buffer, "insert", ele, self._actor_id, blocking=True)
+        self._cache.append(ele)
+
+        if len(self._cache) >= self._flush_cache_every:
+            if_ray_actor(
+                self._replay_buffer,
+                "insert",
+                self._cache,
+                self._actor_id,
+                blocking=True,
+            )
+            self._cache = []
 
         self._prev_ts = next_timestep
 

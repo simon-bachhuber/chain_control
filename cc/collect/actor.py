@@ -52,6 +52,7 @@ class PolicyActor(core.Actor):
 
         self.count = 0
         self._last_extras = None
+        self._adder.reset()
 
     def observe(self, action, next_timestep):
         if self._adder:

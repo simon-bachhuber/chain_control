@@ -1,7 +1,7 @@
 import asyncio
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Union
 
 import ray
 
@@ -151,10 +151,17 @@ class ReplayBuffer(_ReplayBuffer, AbstractReplayBuffer):
             return []
         return self._sample(bs, force_batch_size)
 
-    def insert(self, replay_element: ReplayElement, actor_id):
+    def insert(
+        self, replay_element: Union[ReplayElement, list[ReplayElement]], actor_id
+    ):
         if not self._insert_ready():
             return
-        self._insert(replay_element, actor_id)
+
+        if isinstance(replay_element, ReplayElement):
+            replay_element = [replay_element]
+
+        for ele in replay_element:
+            self._insert(ele, actor_id)
 
 
 @ray.remote
@@ -167,7 +174,14 @@ class RayReplayBuffer(_ReplayBuffer, AbstractReplayBuffer):
             await asyncio.sleep(0)
         return self._sample(bs, force_batch_size)
 
-    async def insert(self, replay_element: ReplayElement, actor_id):
+    async def insert(
+        self, replay_element: Union[ReplayElement, list[ReplayElement]], actor_id
+    ):
         while not self._insert_ready():
             await asyncio.sleep(0)
-        self._insert(replay_element, actor_id)
+
+        if isinstance(replay_element, ReplayElement):
+            replay_element = [replay_element]
+
+        for ele in replay_element:
+            self._insert(ele, actor_id)
