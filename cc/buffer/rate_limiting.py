@@ -46,12 +46,16 @@ class NoRateLimitingLimiter(AbstractRateLimiter):
 
 class RateLimiter(AbstractRateLimiter):
     def __init__(
-        self, maxlen=1_000, target_ratio=0.1, error_margin=0.01, update_ratio_freq=10
+        self,
+        maxlen=1_000,
+        target_ratio=0.1,
+        error_margin=0.01,
+        update_ratio_every: int = 1,
     ):
         self.maxlen = maxlen
         self.target_ratio = target_ratio
         self.error_margin = error_margin
-        self.update_ratio_freq = update_ratio_freq
+        self.update_ratio_every = update_ratio_every
         self.reset()
 
     def reset(self):
@@ -81,7 +85,7 @@ class RateLimiter(AbstractRateLimiter):
 
     @property
     def _ratio(self) -> float:
-        if self._count > self.update_ratio_freq:
+        if self._count >= self.update_ratio_every:
             self._count = 0
             self._last_ratio = self._current_ratio()
 
