@@ -88,9 +88,8 @@ def collect(env: dm_env.Environment, controller: AbstractController):
 
     _, adder, iterator = make_episodic_buffer_adder_iterator(
         bs=1,
-        ts=env.ts,
-        env_specs=make_environment_spec(env),
-        actor_id=1,
+        env=env,
+        buffer_size_n_trajectories=1,
     )
 
     actor = PolicyActor(policy=controller, action_spec=env.action_spec(), adder=adder)
