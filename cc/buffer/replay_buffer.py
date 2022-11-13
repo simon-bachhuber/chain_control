@@ -64,6 +64,9 @@ class _ReplayBuffer:
         self._last_replay_elements_by_actor_id = {}
         self._episode_ready = False
 
+    def close(self):
+        del self._deque, self._dones, self._weights, self._rate_limiter
+
     def __len__(self) -> int:
         return len(self._deque)
 

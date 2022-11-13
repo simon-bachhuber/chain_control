@@ -45,7 +45,8 @@ setuptools.setup(
         "dm-acme[envs]",
         "scikit-learn",
         "ray",
-        "beartype",
         "equinox",
+        "tqdm",
+        "ipykernel"
     ],
 )

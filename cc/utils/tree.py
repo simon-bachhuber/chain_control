@@ -1,5 +1,7 @@
 from functools import partial, reduce
+from typing import TypeVar
 
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
@@ -9,6 +11,17 @@ from equinox import tree_equal
 
 tree_zeros_like = zeros_like
 tree_ones_like = ones_like
+
+PyTree = TypeVar("PyTree")
+
+
+def tree_bools_like(tree, where=None, invert=False) -> "PyTree[bool]":
+    t, f = (True, False) if not invert else (False, True)
+    default_tree = jax.tree_util.tree_map(lambda _: t, tree)
+    if where:
+        return eqx.tree_at(where, default_tree, f)
+    else:
+        return default_tree
 
 
 def tree_insert_IMPURE(tree, subtree, batch_idxs: tuple[int, ...]):

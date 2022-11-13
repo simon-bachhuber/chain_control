@@ -5,18 +5,18 @@ import equinox as eqx
 import jax.random as jrand
 from acme import core
 
-from ..abstract import AbstractController
-from ..buffer import AbstractAdder
 from ..env.sample_from_spec import sample_action_from_action_spec
-from ..types import Action, Observation, PRNGKey
+from ..core.types import Action, Observation, PRNGKey
 from ..utils import to_jax, to_numpy
+from ..core import Module
+from ..buffer import AbstractAdder
 
 
-class PolicyActor(core.Actor):
+class ModuleActor(core.Actor):
     def __init__(
         self,
         action_spec,
-        policy: Optional[AbstractController] = None,
+        module: Optional[Module] = None,
         key: PRNGKey = jrand.PRNGKey(
             1,
         ),
@@ -26,7 +26,7 @@ class PolicyActor(core.Actor):
 
         self.action_spec = action_spec
         self._adder = adder
-        self._policy = policy
+        self._policy = module
         self.reset_key = reset_key
         self._initial_key = self._key = key
         self.reset()
@@ -36,7 +36,7 @@ class PolicyActor(core.Actor):
         if self._adder:
             self._adder.add_first(timestep)
 
-    def update_policy(self, new_policy: AbstractController):
+    def update_policy(self, new_policy: Module):
         if new_policy:
             self._policy = new_policy.reset()
 
@@ -52,7 +52,8 @@ class PolicyActor(core.Actor):
 
         self.count = 0
         self._last_extras = None
-        self._adder.reset()
+        if self._adder:
+            self._adder.reset()
 
     def observe(self, action, next_timestep):
         if self._adder:
@@ -77,6 +78,6 @@ class PolicyActor(core.Actor):
         return action
 
 
-class RandomActor(PolicyActor):
+class RandomActor(ModuleActor):
     def query_policy(self, obs: Observation, key: PRNGKey) -> Action:
         return sample_action_from_action_spec(key, self.action_spec)

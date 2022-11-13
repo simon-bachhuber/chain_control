@@ -1,10 +1,3 @@
-# TODO
-# all timesteps are equal right now
-dt = 0.01
-# all modules are time-invariant right now
-t = 0.0
-
-
 def _explicit_euler(rhs, t, x, dt):
     dx = rhs(t, x)
     return x + dt * dx
@@ -20,7 +13,7 @@ def _runge_kutta(rhs, t, x, dt):
     return x + dt * dx
 
 
-def integrate(rhs, x, method, t=t, dt=dt):
+def integrate(rhs, x, t, dt, method):
     if method == "RK4":
         return _runge_kutta(rhs, t, x, dt)
     elif method == "EE":

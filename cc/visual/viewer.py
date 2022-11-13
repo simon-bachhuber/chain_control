@@ -12,8 +12,6 @@ def launch_viewer(env: dm_env.Environment, actor: core.Actor):
 def _policy_for_viewer(actor: core.Actor):
 
     actor = copy.deepcopy(actor)
-
-    # TODO super hacky
     if actor._adder:
         actor._adder = None
 

@@ -5,98 +5,79 @@ from acme import EnvironmentLoop
 from acme.utils import loggers
 from tqdm.auto import tqdm
 
-from ..abstract import AbstractController, AbstractModel
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..config import use_tqdm
-from ..controller import FeedforwardController
-from ..env.wrappers import AddRefSignalRewardFnWrapper, ReplacePhysicsByModelWrapper
-from ..types import TimeSeriesOfAct
+from ..core import Module
+from ..core.types import TimeSeriesOfAct
+from ..env.wrappers import AddRefSignalRewardFnWrapper
+from ..module_examples.feedforward_controller import make_feedforward_controller
 from ..utils import to_jax, to_numpy, tree_concat, tree_shape
-from .actor import PolicyActor
+from .actor import ModuleActor
 from .source import (
     ObservationReferenceSource,
-    constant_after_transform_source,
     draw_u_from_cosines,
     draw_u_from_gaussian_process,
 )
 
 
-def concat_iterators(*iterators) -> ReplaySample:
-    return tree_concat([next(iterator) for iterator in iterators], True)
+def concat_samples(*samples) -> ReplaySample:
+    return tree_concat(samples, True)
 
 
-def collect_sample(
+def sample_feedforward_and_collect(
     env: dm_env.Environment, seeds_gp: list[int], seeds_cos: list[Union[int, float]]
 ) -> ReplaySample:
 
-    _, sample_gp = collect_feedforward_and_make_source(env, seeds=seeds_gp)
-    _, sample_cos = collect_feedforward_and_make_source(
+    _, sample_gp = sample_feedforward_collect_and_make_source(env, seeds=seeds_gp)
+    _, sample_cos = sample_feedforward_collect_and_make_source(
         env, draw_u_from_cosines, seeds=seeds_cos
     )
 
-    return tree_concat([sample_gp, sample_cos], True)
-
-
-def collect_reference_source(
-    env: dm_env.Environment,
-    seeds: list[int],
-    constant_after: bool = False,
-    constant_after_T: float = 3.0,
-):
-
-    source, _ = collect_feedforward_and_make_source(env, seeds=seeds)
-
-    if constant_after:
-        source = constant_after_transform_source(source, constant_after_T)
-
-    return source
+    return concat_samples(sample_gp, sample_cos)
 
 
 def collect_exhaust_source(
     env: dm_env.Environment,
-    source: ObservationReferenceSource,
-    controller: AbstractController,
-    model: AbstractModel = None,
+    controller: Module,
 ) -> ReplaySample:
 
-    if model:
-        env = ReplacePhysicsByModelWrapper(env, model)
-
-    # wrap env with source
-    env = AddRefSignalRewardFnWrapper(env, source)
+    assert isinstance(env, AddRefSignalRewardFnWrapper)
+    source = env._source
 
     N = tree_shape(source._yss)
     # collect performance of controller in environment
     pbar = tqdm(range(N), desc="Reference Iterator", disable=not use_tqdm())
-    iterators = []
+    samples = []
     for i_actor in pbar:
         source.change_reference_of_actor(i_actor)
-        iterator = collect(env, controller)
-        iterators.append(iterator)
+        sample = collect(env, controller)
+        samples.append(sample)
 
     # concat samples
-    sample = concat_iterators(*iterators)
+    sample = concat_samples(*samples)
 
     return sample
 
 
-def collect(env: dm_env.Environment, controller: AbstractController):
+def collect(env: dm_env.Environment, controller: Module) -> ReplaySample:
 
     env.reset()
 
-    _, adder, iterator = make_episodic_buffer_adder_iterator(
+    buffer, adder, iterator = make_episodic_buffer_adder_iterator(
         bs=1,
         env=env,
         buffer_size_n_trajectories=1,
     )
 
-    actor = PolicyActor(policy=controller, action_spec=env.action_spec(), adder=adder)
+    actor = ModuleActor(module=controller, action_spec=env.action_spec(), adder=adder)
     loop = EnvironmentLoop(env, actor, logger=loggers.NoOpLogger())
     loop.run_episode()
-    return iterator
+    sample = next(iterator)
+    buffer.close()
+    return sample
 
 
-def collect_feedforward_and_make_source(
+def sample_feedforward_collect_and_make_source(
     env: dm_env.Environment,
     draw_fn=draw_u_from_gaussian_process,
     seeds: list[int] = [
@@ -108,13 +89,13 @@ def collect_feedforward_and_make_source(
 
     ts = env.ts
 
-    iterators = []
+    samples = []
     for seed in seeds:
         us: TimeSeriesOfAct = to_jax(draw_fn(to_numpy(ts), seed=seed))
-        policy = FeedforwardController(us)
-        iterator = collect(env, policy)
-        iterators.append(iterator)
+        policy = make_feedforward_controller(us)
+        sample = collect(env, policy)
+        samples.append(sample)
 
-    sample = concat_iterators(*iterators)
+    sample = concat_samples(*samples)
     source = ObservationReferenceSource(ts, sample.obs, sample.action)
     return source, sample

@@ -7,8 +7,8 @@ import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
-from ..abstract import AbstractObservationReferenceSource
-from ..types import BatchedTimeSeriesOfAct, BatchedTimeSeriesOfRef, TimeSeriesOfRef
+from ..core import AbstractObservationReferenceSource
+from ..core.types import BatchedTimeSeriesOfAct, BatchedTimeSeriesOfRef, TimeSeriesOfRef
 from ..utils import to_numpy, tree_slice
 
 

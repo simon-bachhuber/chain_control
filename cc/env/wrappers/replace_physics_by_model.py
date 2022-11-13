@@ -5,8 +5,8 @@ import equinox as eqx
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
 
-from ...abstract import AbstractModel
-from ...types import Observation
+from ...core.types import Observation
+from ...core import Module
 from ...utils import to_jax, to_numpy
 
 
@@ -14,7 +14,7 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
     def __init__(
         self,
         env: dm_env.Environment,
-        model: AbstractModel,
+        model: Module,
         process_observation: Callable = lambda obs: obs,
     ):
 

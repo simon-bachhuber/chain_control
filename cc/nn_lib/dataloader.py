@@ -1,11 +1,11 @@
 import functools as ft
-from typing import Callable, NamedTuple, Optional, Tuple
+from typing import Callable, NamedTuple, Optional
 
 import jax
 import jax.numpy as jnp
 import jax.random as jrand
 
-from ..types import PRNGKey, PyTree
+from ..core import PRNGKey, PyTree, make_module_from_function
 from ..utils import tree_indices, tree_shape
 
 
@@ -46,35 +46,32 @@ class MiniBatchState(NamedTuple):
     key: PRNGKey
 
 
-class MiniBatch(NamedTuple):
-    init: Callable[[PyTree], MiniBatchState]
-    update: Callable[[MiniBatchState, PyTree], Tuple[MiniBatchState, PyTree]]
-
-
-def minibatch(
-    key: PRNGKey,
+def make_dataloader(
+    data: PyTree,
+    key,
     n_minibatches: int = 1,
-    axis: int = 0,
+    batch_axis: int = 0,
     reshuffle: bool = True,
-    tree_transform: Optional[Callable] = None,
+    data_transform: Optional[Callable] = None,
+    data_split_fn: Callable = lambda data: (data[0], data[1]),
 ):
-    def init(tree: PyTree):
-        bs = tree_shape(tree, axis)
-        assert bs % n_minibatches == 0
-        minibatch_size = bs // n_minibatches
-        inner_key, consume = jrand.split(key)
 
-        return MiniBatchState(
-            gen_minibatch_indices(consume, bs, minibatch_size),
-            0,
-            bs,
-            n_minibatches,
-            minibatch_size,
-            inner_key,
-        )
+    bs = tree_shape(data, batch_axis)
+    assert bs % n_minibatches == 0
+    minibatch_size = bs // n_minibatches
+    key, consume = jrand.split(key)
 
-    def update(state: MiniBatchState, tree: PyTree) -> Tuple[MiniBatchState, PyTree]:
+    init_state = MiniBatchState(
+        gen_minibatch_indices(consume, bs, minibatch_size),
+        0,
+        bs,
+        n_minibatches,
+        minibatch_size,
+        key,
+    )
 
+    # closures `data`
+    def forward(params, state: MiniBatchState, x):
         indices = state.indices
         key = state.key
         if state.i >= state.n_minibatches:
@@ -86,34 +83,22 @@ def minibatch(
         # reset counter if required
         i = state.i % state.n_minibatches
 
-        batch_of_tree = tree_indices(tree, indices[i], axis)
+        batch_of_data = tree_indices(data, indices[i], batch_axis)
 
-        if tree_transform:
+        if data_transform:
             key, consume = jrand.split(key)
-            batch_of_tree = tree_transform(consume, batch_of_tree, state.minibatch_size)
+            batch_of_data = data_transform(consume, batch_of_data, state.minibatch_size)
 
         return (
             MiniBatchState(
-                indices, i + 1, state.bs, state.n_minibatches, state.minibatch_size, key
+                indices,
+                i + 1,
+                state.bs,
+                state.n_minibatches,
+                state.minibatch_size,
+                key,
             ),
-            batch_of_tree,
+            data_split_fn(batch_of_data),
         )
 
-    return MiniBatch(init, update)
-
-
-class NoOpMiniBatchState(NamedTuple):
-    n_minibatches: int
-
-
-def no_op_minibatch(n_minibatches):
-    def init(tree):
-        return NoOpMiniBatchState(n_minibatches)
-
-    def update(state, tree):
-        return state, tree
-
-    return MiniBatch(init, update)
-
-
-# minibatch = no_op_minibatch
+    return make_module_from_function(forward, {}, init_state, name="dataloader")

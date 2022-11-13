@@ -5,7 +5,7 @@ import dm_env
 import numpy as np
 from flax import struct
 
-from ..types import PyTree
+from ..core.types import PyTree
 
 
 @dataclass
