@@ -8,3 +8,4 @@ __pycache__
 
 # prefix module/notebook with p_ to mark as private (to you)
 p_*.*py*
+*.pkl
