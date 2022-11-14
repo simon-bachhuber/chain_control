@@ -43,6 +43,7 @@ def make_step_fn(
     dataloader,
     optimizer,
     _lambda_l2: float,
+    _lambda_l2_legacy: float,
     reduce_fn,
     include_init_state: bool,
     name,
@@ -63,9 +64,10 @@ def make_step_fn(
         error_signal = vmap_module_eval_and_reduce(
             module, inputs, targets, reduce_fn=reduce_fn
         )
-        l2_parameter_norm = l2_norm(flatten_module(module, include_init_state))
+        flat_parameters = flatten_module(module, include_init_state)
+        l2_parameter_norm = l2_norm(flat_parameters)
         return (
-            error_signal + _lambda_l2 * l2_parameter_norm,
+            error_signal + _lambda_l2 * l2_parameter_norm + _lambda_l2_legacy * jnp.mean(flat_parameters**2),
             (
                 error_signal,
                 l2_parameter_norm,
@@ -162,6 +164,7 @@ class ModuleTrainer:
         test_log_every: int = 1,
         opt_state_log_fns=[],
         _lambda_l2: float = 0.0,
+        _lambda_l2_legacy: float = 0.0,
         init_state_is_param: bool = False,
         use_wandb: bool = False,
         wandb_config: dict = {},
@@ -187,6 +190,7 @@ class ModuleTrainer:
             train_dataloader,
             optimizer,
             _lambda_l2,
+            _lambda_l2_legacy,
             error_fn,
             init_state_is_param,
             name,
