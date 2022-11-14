@@ -1,6 +1,7 @@
 import equinox as eqx
 
 from ..core import make_module_from_eqx_module
+from ..utils import add_batch_dim, tree_concat
 from .module_utils import filter_scan_module
 
 
@@ -37,7 +38,9 @@ def module_output_transform(module, output_transform, name="output_transform"):
     return make_module_from_eqx_module(OutputTransform(), module, name=name)
 
 
-def unroll_module_transform(module, length=None, reset=True, name="unrolled-module"):
+def unroll_module_transform(
+    module, length=None, reset=True, x0=None, name="unrolled-module"
+):
     def scan_fn(carry, x):
         module = carry
         new_module, y = module(x)
@@ -53,7 +56,12 @@ def unroll_module_transform(module, length=None, reset=True, name="unrolled-modu
             if reset:
                 module = module.reset()
 
+            if x0 is not None:
+                _, y0 = module(x0)
+
             _, ys = filter_scan_module(scan_fn, init=module, xs=xs, length=length)
+            if x0 is not None:
+                ys = tree_concat([add_batch_dim(y0), ys], True, backend="jax")
             return module, ys
 
     return make_module_from_eqx_module(UnrolledModule(), module, name=name)
