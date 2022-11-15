@@ -2,7 +2,7 @@ import jax.random as jrand
 from absl.testing import absltest
 from dm_env import test_utils
 
-from ...module_examples.neural_ode_v1 import make_neural_ode
+from ...model import LinearModel, LinearModelOptions
 from ..make_env import make_env
 from .replace_physics_by_model import ReplacePhysicsByModelWrapper
 
@@ -14,17 +14,8 @@ def dummy_env():
 
 
 def dummy_model():
-    env = dummy_env()
-    return make_neural_ode(
-        env.action_spec(),
-        env.observation_spec(),
-        env.control_timestep,
-        3,
-        jrand.PRNGKey(
-            1,
-        ),
-        "dummy-model",
-    )
+    model = LinearModel(LinearModelOptions(1, 1, 1, "EE", jrand.PRNGKey(1,)))
+    return model
 
 
 def test_attributes():

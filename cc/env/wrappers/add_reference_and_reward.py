@@ -7,7 +7,7 @@ from acme.wrappers import EnvironmentWrapper
 
 from ...core import AbstractObservationReferenceSource
 from ...utils import batch_concat, tree_slice
-from ..sample_from_spec import _spec_from_observation
+from ...utils.sample_from_spec import _spec_from_observation
 
 
 def default_reward_fn(obs, obs_ref) -> np.ndarray:

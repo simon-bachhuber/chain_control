@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 import jax.random as jrand
 
-from ..env.sample_from_spec import ArraySpecs, sample_from_tree_of_specs
+from ..utils import ArraySpecs, sample_from_tree_of_specs
 from ..nn_lib import integrate
 from ..core import make_module_from_eqx_module
 from ..utils import make_postprocess_fn
@@ -17,8 +17,8 @@ def mlp_network(
     sizes = [in_size] + depth * [width] + [out_size]
 
     for i, (s_in, s_out) in enumerate(zip(sizes[:-1], sizes[1:])):
-
-        layers.append(eqx.nn.Linear(s_in, s_out, key=key))
+        key, consume = jrand.split(key)
+        layers.append(eqx.nn.Linear(s_in, s_out, key=consume))
 
         if i < len(sizes) - 2:
             layers.append(eqx.nn.Lambda(act_fn))
@@ -56,7 +56,7 @@ def make_neural_ode(
     g_input_dim = state_dim
     g_output_dim = output_dim
 
-    key, f_key, g_key = jrand.split(key, 3)
+    f_key, g_key = jrand.split(key, 2)
     init_state = jnp.zeros((state_dim,))
     postprocess_fn = make_postprocess_fn(toy_output=toy_output)
 

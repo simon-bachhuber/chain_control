@@ -47,6 +47,6 @@ setuptools.setup(
         "ray",
         "equinox",
         "tqdm",
-        "ipykernel"
+        "ipykernel",
     ],
 )

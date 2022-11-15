@@ -5,7 +5,7 @@ import equinox as eqx
 import jax.random as jrand
 from acme import core
 
-from ..env.sample_from_spec import sample_action_from_action_spec
+from ..utils import sample_action_from_action_spec
 from ..core.types import Action, Observation, PRNGKey
 from ..utils import to_jax, to_numpy
 from ..core import Module

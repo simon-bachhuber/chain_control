@@ -1,7 +1,7 @@
 from absl.testing import absltest
 from dm_env import test_utils
 
-from ...collect import collect_reference_source
+from ...collect import sample_feedforward_collect_and_make_source
 from ..make_env import make_env
 from .add_reference_and_reward import AddRefSignalRewardFnWrapper
 
@@ -13,7 +13,7 @@ def dummy_env():
 
 
 def dummy_source(env):
-    return collect_reference_source(env, [0])
+    return sample_feedforward_collect_and_make_source(env, seeds=[0])[0]
 
 
 def test_attributes():

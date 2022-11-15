@@ -8,4 +8,7 @@ __pycache__
 cache
 
 # prefix module/notebook with p_ to mark as private (to you)
-p_*.*py*
+p_*
+*.pkl
+configs
+ray_results

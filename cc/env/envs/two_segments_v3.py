@@ -4,7 +4,7 @@ import numpy as np
 from dm_control import mujoco
 from dm_control.rl import control
 
-from ..sample_from_spec import _spec_from_observation
+from ...utils.sample_from_spec import _spec_from_observation
 from .common import ASSETS, read_model
 
 

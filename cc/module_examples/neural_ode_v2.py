@@ -3,7 +3,7 @@ import jax
 import jax.numpy as jnp
 import jax.random as jrand
 
-from ..env.sample_from_spec import ArraySpecs, sample_from_tree_of_specs
+from ..utils import ArraySpecs, sample_from_tree_of_specs
 from ..utils import batch_concat
 from ..nn_lib import integrate, mlp_network
 from ..core import make_module_from_eqx_module

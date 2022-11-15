@@ -3,7 +3,7 @@ import jax.tree_util as jtu
 import numpy as np
 from jax.flatten_util import ravel_pytree
 
-from ..env.sample_from_spec import sample_from_tree_of_specs
+from .sample_from_spec import sample_from_tree_of_specs
 
 
 def to_jax(tree):

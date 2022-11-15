@@ -9,10 +9,10 @@ import numpy as np
 from acme.jax.utils import add_batch_dim, batch_concat, ones_like, zeros_like
 from equinox import tree_equal
 
+from ..core.types import PyTree
+
 tree_zeros_like = zeros_like
 tree_ones_like = ones_like
-
-PyTree = TypeVar("PyTree")
 
 
 def tree_bools_like(tree, where=None, invert=False) -> "PyTree[bool]":

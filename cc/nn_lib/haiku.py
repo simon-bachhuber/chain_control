@@ -1,7 +1,7 @@
 import haiku as hk
 import jax.random as jrand
 
-from ..env.sample_from_spec import sample_from_tree_of_specs
+from ..utils import sample_from_tree_of_specs
 from ..core import Module, make_module_from_function
 
 

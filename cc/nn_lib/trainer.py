@@ -67,7 +67,9 @@ def make_step_fn(
         flat_parameters = flatten_module(module, include_init_state)
         l2_parameter_norm = l2_norm(flat_parameters)
         return (
-            error_signal + _lambda_l2 * l2_parameter_norm + _lambda_l2_legacy * jnp.mean(flat_parameters**2),
+            error_signal
+            + _lambda_l2 * l2_parameter_norm
+            + _lambda_l2_legacy * jnp.mean(flat_parameters**2),
             (
                 error_signal,
                 l2_parameter_norm,
@@ -84,7 +86,9 @@ def make_step_fn(
             (loss_value, (error_value, l2_parameter_norm_value)), grad = loss_fn(
                 module, inputs, targets
             )
+            print("L2-gradient norm: ", l2_norm(flatten_module(grad)))
             updates, opt_state = optimizer.update(grad, opt_state)
+            print("L2-update norm: ", l2_norm(flatten_module(updates)))
             module = eqx.apply_updates(module, updates)
             loss.append(loss_value)
             error.append(error_value)

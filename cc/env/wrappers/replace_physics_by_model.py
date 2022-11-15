@@ -16,10 +16,12 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         env: dm_env.Environment,
         model: Module,
         process_observation: Callable = lambda obs: obs,
+        y0_from_env: bool = False,
     ):
 
         super().__init__(env)
         self._model = model
+        self._y0_from_env = y0_from_env
         self._process_obs = process_observation
         self._dummy_reward = self._environment.reward_spec().generate_value()
         self._dummy_discount = self._environment.discount_spec().generate_value()
@@ -30,7 +32,10 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         # reset model state
         self._model = self._model.reset()
 
-        obs0 = to_numpy(self._model.y0())
+        if not self._y0_from_env:
+            obs0 = to_numpy(self._model.y0())
+        else:
+            obs0 = self._environment.reset().observation 
 
         return self._build_timestep(dm_env.StepType.FIRST, obs0)
 
