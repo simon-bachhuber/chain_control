@@ -2,6 +2,7 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax.flatten_util import ravel_pytree
+from .tree import batch_concat
 
 from .sample_from_spec import sample_from_tree_of_specs
 
@@ -29,10 +30,12 @@ def l2_norm(vector):
 
 
 def mae(y, yhat):
+    y, yhat = batch_concat(y, 0), batch_concat(yhat, 0)
     return jnp.mean(jnp.abs(y - yhat))
 
 
 def mse(y, yhat):
+    y, yhat = batch_concat(y, 0), batch_concat(yhat, 0)
     return jnp.mean((y - yhat) ** 2)
 
 

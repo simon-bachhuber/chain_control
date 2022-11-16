@@ -46,20 +46,24 @@ class MiniBatchState(NamedTuple):
     key: PRNGKey
 
 
-class MiniBatch(NamedTuple):
-    init: Callable[[PyTree], MiniBatchState]
-    update: Callable[[MiniBatchState, PyTree], Tuple[MiniBatchState, PyTree]]
+MiniBatchUpdateFn = Callable[[MiniBatchState], Tuple[MiniBatchState, PyTree]]
 
 
-def minibatch(
+class Dataloader(NamedTuple):
+    minibatch_state: MiniBatchState
+    update_fn: MiniBatchUpdateFn
+
+
+def make_dataloader(
+    data: PyTree[jnp.ndarray],
     key: PRNGKey,
     n_minibatches: int = 1,
     axis: int = 0,
     reshuffle: bool = True,
     tree_transform: Optional[Callable] = None,
-):
-    def init(tree: PyTree):
-        bs = tree_shape(tree, axis)
+) -> Dataloader:
+    def init_minibatch_state():
+        bs = tree_shape(data, axis)
         assert bs % n_minibatches == 0
         minibatch_size = bs // n_minibatches
         inner_key, consume = jrand.split(key)
@@ -73,7 +77,8 @@ def minibatch(
             inner_key,
         )
 
-    def update(state: MiniBatchState, tree: PyTree) -> Tuple[MiniBatchState, PyTree]:
+    # closures `data`
+    def update_fn(state: MiniBatchState) -> Tuple[MiniBatchState, PyTree]:
 
         indices = state.indices
         key = state.key
@@ -86,7 +91,7 @@ def minibatch(
         # reset counter if required
         i = state.i % state.n_minibatches
 
-        batch_of_tree = tree_indices(tree, indices[i], axis)
+        batch_of_tree = tree_indices(data, indices[i], axis)
 
         if tree_transform:
             key, consume = jrand.split(key)
@@ -99,21 +104,4 @@ def minibatch(
             batch_of_tree,
         )
 
-    return MiniBatch(init, update)
-
-
-class NoOpMiniBatchState(NamedTuple):
-    n_minibatches: int
-
-
-def no_op_minibatch(n_minibatches):
-    def init(tree):
-        return NoOpMiniBatchState(n_minibatches)
-
-    def update(state, tree):
-        return state, tree
-
-    return MiniBatch(init, update)
-
-
-# minibatch = no_op_minibatch
+    return Dataloader(init_minibatch_state(), update_fn)

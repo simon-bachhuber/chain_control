@@ -1,14 +1,10 @@
-docs/3_training_a_model_two_segments_v2.ipynb
 *.egg-info
-icon1.png
 __pycache__
 .vscode
 .pytype*
 .pytest*
-cache
 
-# prefix module/notebook with p_ to mark as private (to you)
+# prefix module/notebook/folder with p_ to mark as private (to you)
 p_*
 *.pkl
-configs
-ray_results
+results

@@ -5,8 +5,8 @@ import equinox as eqx
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
 
+from ...core import AbstractModel
 from ...core.types import Observation
-from ...core import Module
 from ...utils import to_jax, to_numpy
 
 
@@ -14,7 +14,7 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
     def __init__(
         self,
         env: dm_env.Environment,
-        model: Module,
+        model: AbstractModel,
         process_observation: Callable = lambda obs: obs,
         y0_from_env: bool = False,
     ):
@@ -35,7 +35,7 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         if not self._y0_from_env:
             obs0 = to_numpy(self._model.y0())
         else:
-            obs0 = self._environment.reset().observation 
+            obs0 = self._environment.reset().observation
 
         return self._build_timestep(dm_env.StepType.FIRST, obs0)
 

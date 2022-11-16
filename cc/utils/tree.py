@@ -1,5 +1,4 @@
 from functools import partial, reduce
-from typing import TypeVar
 
 import equinox as eqx
 import jax
@@ -9,13 +8,11 @@ import numpy as np
 from acme.jax.utils import add_batch_dim, batch_concat, ones_like, zeros_like
 from equinox import tree_equal
 
-from ..core.types import PyTree
-
 tree_zeros_like = zeros_like
 tree_ones_like = ones_like
 
 
-def tree_bools_like(tree, where=None, invert=False) -> "PyTree[bool]":
+def tree_bools_like(tree, where=None, invert=False):
     t, f = (True, False) if not invert else (False, True)
     default_tree = jax.tree_util.tree_map(lambda _: t, tree)
     if where:
@@ -53,6 +50,9 @@ def tree_concat(trees: list, along_existing_first_axis=False, backend="numpy"):
             None,
             slice(None),
         )
+
+    # otherwise scalar-arrays will lead to indexing error
+    trees = jax.tree_map(lambda arr: jnp.atleast_1d(arr), trees)
 
     initial = jax.tree_map(
         lambda a1, a2: concat((a1[sl], a2[sl]), axis=0), trees[0], trees[1]

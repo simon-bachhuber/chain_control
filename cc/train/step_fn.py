@@ -1,198 +1,184 @@
 import functools as ft
 from collections import OrderedDict
-from types import FunctionType
-from typing import Callable, NamedTuple, Tuple
+from dataclasses import dataclass
+from typing import Callable
 
 import equinox as eqx
-import jax
 import jax.numpy as jnp
-import jax.random as jrand
 import jax.tree_util as jtu
 import optax
 
-from ..buffer import ReplaySample
-from ..core import PRNGKey
-from ..rhs.parameter import filter_module, flatten_module
-from ..utils import to_jax, l2_norm
-from .minibatch import MiniBatchState, minibatch
-from .unroll import unroll_closed_loop, unroll_model
+from ..core import AbstractController, AbstractModel, PyTree
+from ..core.module_utils import flatten_module
+from .minibatch import Dataloader, MiniBatchState
+from ..utils import batch_concat, mse, tree_concat
+
+REGU_FN = Callable[[jnp.ndarray], dict[str, float]]
+METRIC_FN = Callable[[PyTree, PyTree], dict[str, float]]
+LOSS_FN = METRIC_FN
 
 
-class ModelTrainLoss(NamedTuple):
-    train_loss: jnp.ndarray
+@dataclass
+class EvaluationMetrices:
+    data: PyTree
+    metrices: tuple[METRIC_FN]
 
 
-class ModelTrainTestLoss(NamedTuple):
-    train_loss: jnp.ndarray
-    test_loss: jnp.ndarray
+@dataclass
+class Regularisation:
+    prefactor: float
+    reduce_weights: REGU_FN
 
 
-def step_fn_model(
-    model,
-    train_sample: ReplaySample,
-    key,
-    test_sample: ReplaySample = None,
-    _lambda: float = 0.1,
-    optimizer=optax.adam(3e-3),
-    number_of_minibatches: int = 1,
-    eval_test_loss: bool = True,
-) -> Tuple[FunctionType, MiniBatchState]:
+@dataclass
+class TrainingOptionsModel:
+    training_data: Dataloader
+    optimizer: optax.GradientTransformation
+    metrices: tuple[EvaluationMetrices] = ()
+    regularisers: tuple[Regularisation] = ()
+    loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
 
-    def loss_fn_model(model, sample: ReplaySample):
-        yhatss = jax.vmap(lambda us: unroll_model(model, us))(sample.action)[
-            "xpos_of_segment_end"
-        ]
-        yss = sample.obs["xpos_of_segment_end"]
-        params = flatten_module(model)
-        return jnp.mean((yss - yhatss) ** 2) + _lambda * jnp.mean(params**2)
 
-    grad_loss_fn_model = eqx.filter_value_and_grad(
-        loss_fn_model, arg=filter_module(model)
-    )
+def compute_regularisers(model_or_controller, regularisers: list[Regularisation]):
+    if len(regularisers) == 0:
+        return 0.0, {}
 
-    key, consume = jrand.split(key)
-    # TODO key is hard coded; only to get the "0.4675"-model
-    minibatcher = minibatch(
-        n_minibatches=number_of_minibatches,
-        key=jrand.PRNGKey(
-            1,
-        ),
-    )
-    minibatch_state = minibatcher.init(train_sample)
+    flat_module = flatten_module(model_or_controller)
 
-    def _step_fn(model, opt_state, minibatch_state: MiniBatchState):
+    regu_value, log_of_regus = 0.0, {}
+    for regu in regularisers:
+        this_value = regu.prefactor * regu.reduce_weights(flat_module)
+        log_of_regus.update(this_value)
+        regu_value += batch_concat(this_value, 0)
+    return regu_value, log_of_regus
 
-        if eval_test_loss:
-            # TODO
-            # Write proper error message
-            if test_sample is None:
-                raise Exception()
 
-            test_loss = loss_fn_model(model, test_sample)
+def eval_metrices(model, metrices: list[EvaluationMetrices]):
+    if len(metrices) == 0:
+        return {}
 
-        train_loss = []
+    log_of_metrices = {}
+    for metric in metrices:
+        (inputs, targets) = metric.data
+        preds = eqx.filter_vmap(model.unroll)(inputs)
+        for metric_fn in metric.metrices:
+            this_value = metric_fn(preds, targets)
+            log_of_metrices.update(this_value)
+
+    return log_of_metrices
+
+
+def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
+    @ft.partial(eqx.filter_value_and_grad, arg=model.grad_filter_spec(), has_aux=True)
+    def loss_fn_model(model: AbstractModel, inputs, targets):
+        logs = {}
+        preds = eqx.filter_vmap(model.unroll)(inputs)
+        loss_value = options.loss_fn(targets, preds)
+        logs.update(loss_value)
+
+        regu_value, log_of_regus = compute_regularisers(model, options.regularisers)
+        logs.update(log_of_regus)
+
+        loss_value = batch_concat(loss_value, 0) + regu_value
+        assert loss_value.ndim == 1 or loss_value.ndim == 0
+
+        return jnp.squeeze(loss_value), logs
+
+    optimizer = options.optimizer
+
+    def step_fn_model(model: AbstractModel, opt_state, minibatch_state: MiniBatchState):
+
+        minibatched_logs = []
         for _ in range(minibatch_state.n_minibatches):
-            minibatch_state, batch_of_sample = minibatcher.update(
-                minibatch_state, train_sample
+            minibatch_state, (inputs, targets) = options.training_data.update_fn(
+                minibatch_state
             )
-            value, grad = grad_loss_fn_model(model, batch_of_sample)
-            print("L2-gradient norm: ", l2_norm(flatten_module(grad)))
-            updates, opt_state = optimizer.update(grad, opt_state)
-            print("L2-update norm: ", l2_norm(flatten_module(updates)))
+            (loss, logs), grads = loss_fn_model(model, inputs, targets)
+            logs.update(dict(train_loss=loss))
+            minibatched_logs.append(logs)
+
+            updates, opt_state = optimizer.update(grads, opt_state)
             model = eqx.apply_updates(model, updates)
-            train_loss.append(value)
 
-        if eval_test_loss:
-            train_test_loss = ModelTrainTestLoss(
-                jnp.mean(jnp.array(train_loss)), test_loss
-            )
-        else:
-            train_test_loss = ModelTrainLoss(jnp.mean(jnp.array(train_loss)))
+        # concat logs
+        stacked_logs = tree_concat(minibatched_logs, False, "jax")
+        logs = jtu.tree_map(lambda arr: jnp.mean(arr, axis=0), stacked_logs)
 
-        return model, opt_state, minibatch_state, train_test_loss
+        # eval metrices
+        log_of_metrices = eval_metrices(model, options.metrices)
+        logs.update(log_of_metrices)
 
-    return _step_fn, minibatch_state
+        return model, opt_state, minibatch_state, logs
+
+    opt_state = optimizer.init(eqx.filter(model, model.grad_filter_spec()))
+    minibatch_state = options.training_data.minibatch_state
+
+    return step_fn_model, opt_state, minibatch_state
 
 
-def default_merge_x_y(x, y):
+def merge_x_y(x, y):
     d = OrderedDict()
     d["ref"] = x
     d["obs"] = y
     return d
 
 
-def step_fn_controller(
-    controller,
-    models,
-    source,
-    key: PRNGKey,
-    u_transform_factory,
-    merge_x_y: Callable = default_merge_x_y,
-    _lambda: float = 0.1,
-    optimizer=optax.adam(3e-3),
-    delay: int = 0,
-    n_minibatches: int = 1,
-    tree_transform=None,
+@dataclass
+class TrainingOptionsController:
+    refss: Dataloader  # Batched TimeSeries of References
+    optimizer: optax.GradientTransformation
+    regularisers: tuple[Regularisation] = ()
+    merge_x_y: Callable[[PyTree, PyTree], OrderedDict] = merge_x_y
+    loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
+
+
+def make_step_fn_controller(
+    controller: AbstractController,
+    model: AbstractModel,
+    options: TrainingOptionsController,
 ):
+    @ft.partial(
+        eqx.filter_value_and_grad, arg=controller.grad_filter_spec(), has_aux=True
+    )
+    def loss_fn_controller(controller: AbstractModel, refss):
+        logs = {}
+        refsshat = eqx.filter_vmap(controller.unroll(model, merge_x_y))(refss)
+        loss_value = options.loss_fn(refss, refsshat)
+        logs.update(loss_value)
 
-    refss = to_jax(source.get_references_for_optimisation())
-    key, consume = jrand.split(key)
-    minibatcher = minibatch(consume, n_minibatches, tree_transform=tree_transform)
-    minibatch_state = minibatcher.init(refss)
+        regu_value, log_of_regus = compute_regularisers(
+            controller, options.regularisers
+        )
+        logs.update(log_of_regus)
 
-    @eqx.filter_jit
-    @ft.partial(eqx.filter_value_and_grad, arg=filter_module(controller))
-    def grad_loss_fn_controller(controller, refss, key: PRNGKey):
+        loss_value = batch_concat(loss_value, 0) + regu_value
+        assert loss_value.ndim == 0 or loss_value.ndim == 1
 
-        # for regularisation on parameter norm
-        params = flatten_module(controller)
+        return jnp.squeeze(loss_value), logs
 
-        # u1 = controller(y0, ref0) -> y1 = model(u1)
-        # so to create y_0_T we only need ref_0_Tm1
-        refss_0_Tm1 = jtu.tree_map(lambda arr: arr[:, :-1], refss)
+    optimizer = options.optimizer
 
-        # split keys for vmap
-        keys = jrand.split(key, minibatch_state.minibatch_size)
+    def step_fn_controller(
+        controller: AbstractController, opt_state, minibatch_state: MiniBatchState
+    ):
 
-        if len(models) > 1:
+        minibatched_logs = []
+        for i in range(minibatch_state.n_minibatches):
+            minibatch_state, batch_of_refss = options.refss.update_fn(minibatch_state)
+            (loss, logs), grads = loss_fn_controller(controller, batch_of_refss)
+            logs.update(dict(train_loss=loss))
+            minibatched_logs.append(logs)
 
-            yhatsss = []
-            for model in models:
-                yhatss = jax.vmap(
-                    lambda refs, key: unroll_closed_loop(
-                        model,
-                        controller,
-                        refs,
-                        model.y0(),
-                        merge_x_y,
-                        delay,
-                        u_transform_factory,
-                        key,
-                    )
-                )(refss_0_Tm1, keys)["xpos_of_segment_end"]
-                yhatsss.append(yhatss)
-
-            yhatsss = jnp.stack(yhatsss)
-            refsss = jnp.repeat(refss["xpos_of_segment_end"][None], len(models), axis=0)
-
-            return jnp.mean((refsss - yhatsss) ** 2) + _lambda * jnp.mean(params**2)
-
-        else:
-            model = models[0]
-            yhatss = jax.vmap(
-                lambda refs, key: unroll_closed_loop(
-                    model,
-                    controller,
-                    refs,
-                    model.y0(),
-                    merge_x_y,
-                    delay,
-                    u_transform_factory,
-                    key,
-                )
-            )(refss_0_Tm1, keys)["xpos_of_segment_end"]
-
-            return jnp.mean(
-                (refss["xpos_of_segment_end"] - yhatss) ** 2
-            ) + _lambda * jnp.mean(params**2)
-
-    @eqx.filter_jit
-    def _step_fn(controller, opt_state, minibatch_state: MiniBatchState):
-
-        loss = []
-        for _ in range(minibatch_state.n_minibatches):
-            minibatch_state, minibatch_refss = minibatcher.update(
-                minibatch_state, refss
-            )
-            # minibatch state already carries a key
-            key, consume = jrand.split(minibatch_state.key)
-            minibatch_state = minibatch_state._replace(key=key)
-
-            value, grad = grad_loss_fn_controller(controller, minibatch_refss, consume)
-            updates, opt_state = optimizer.update(grad, opt_state)
+            updates, opt_state = optimizer.update(grads, opt_state)
             controller = eqx.apply_updates(controller, updates)
-            loss.append(value)
 
-        return controller, opt_state, minibatch_state, jnp.mean(jnp.array(loss))
+        # concat logs
+        stacked_logs = tree_concat(minibatched_logs, False, "jax")
+        logs = jtu.tree_map(lambda arr: jnp.mean(arr, axis=0), stacked_logs)
 
-    return _step_fn, minibatch_state
+        return controller, opt_state, minibatch_state, logs
+
+    opt_state = optimizer.init(eqx.filter(controller, controller.grad_filter_spec()))
+    minibatch_state = options.refss.minibatch_state
+
+    return step_fn_controller, opt_state, minibatch_state

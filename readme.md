@@ -1,7 +1,7 @@
 # Chain Control (cc)
 
 <p align="center">
-<img src="icon2.png" height="200" />
+<img src="icons/icon2.png" height="200" />
 </p>
 
 This package provides components to 
@@ -18,27 +18,15 @@ Make sure that you first fulfill the following dependencies
 - Requirements of `dm_control` under `Rendering` (https://github.com/deepmind/dm_control)
 - `RecordVideoWrapper` requires `ffmpeg` to be available in terminal
 
-### Steps
+Then, check out the setup script located under `scripts/first_setup.sh`. 
 
-- create & activate new conda environment with Python 3.9
-- git clone this repository
-- in root of this repository (where `setup.py` is located) execute `pip install -e .`
+1. create a new conda environment for this project using `conda create -n chain_control python=3.9`
+2. git clone this repository
+3. cd into the `scripts` folder and use `source first_setup.sh` file
 
 ## Documentation
 
-Check out the five introductory notebooks located under /docs
-
-## Modules
-
-- cc.env.
-    - envs 
-        
-        Contains the different simulation setups. Each setup consists of two files. `env_id.py` and `env_id.xml`
-    - wrappers
-
-        Contains many useful wrappers that modifies a simulation setup (or an Environment).
-
-    - ...
+Check out the introductory notebooks located under `/docs` and the examples under `/cc/examples`
 
 ## Bugfixes
 

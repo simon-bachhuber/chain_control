@@ -1,7 +1,7 @@
 from absl.testing import absltest
 from dm_env import test_utils
 
-from ...collect import sample_feedforward_collect_and_make_source
+from ..collect import sample_feedforward_collect_and_make_source
 from ..make_env import make_env
 from .add_reference_and_reward import AddRefSignalRewardFnWrapper
 

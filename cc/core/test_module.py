@@ -1,97 +1,103 @@
 import equinox as eqx
 import jax.numpy as jnp
 
-from .module import make_module_from_eqx_module, make_module_from_function
-from ..nn_lib import filter_scan_module
+from .abstract import AbstractModel
 
 
-def make_counter(step_size):
-    init_state = jnp.array(0)
-    init_params = step_size
+class Counter(AbstractModel):
+    step_size: jnp.ndarray
+    count: jnp.ndarray = jnp.array(0)
 
-    class CountUp(eqx.Module):
-        step_size: jnp.ndarray
+    def step(self, x={}):
+        return Counter(self.step_size, self.count + self.step_size), self.count
 
-        def __call__(self, state, x):
-            del x
-            return state + self.step_size, state
+    def grad_filter_spec(self):
+        return super().grad_filter_spec()
 
-    return make_module_from_eqx_module(CountUp(init_params), init_state)
+    def reset(self):
+        return Counter(self.step_size, jnp.array(0))
+
+    def y0(self):
+        return self.count
 
 
-def make_many_counters(number_of_counters: int = 3):
-    init_state = [
-        make_counter(jnp.array(step_size)) for step_size in range(number_of_counters)
-    ]
-    init_params = {}
+init_counters = [Counter(jnp.array(i)) for i in range(3)]
 
-    def apply_fn(params, state, x):
-        counters = state
-        ys = [counter()[1] for counter in counters]
-        new_counters = [counter()[0] for counter in counters]
-        return new_counters, ys
 
-    return make_module_from_function(apply_fn, init_params, init_state)
+class ManyCounters(AbstractModel):
+    counters: list[Counter]
+
+    def step(self, x={}):
+        y = [counter.step()[1] for counter in self.counters]
+        new_state = [counter.step()[0] for counter in self.counters]
+        print(y)
+        return ManyCounters(new_state), y
+
+    def reset(self):
+        return ManyCounters(init_counters)
+
+    def grad_filter_spec(self):
+        return super().grad_filter_spec()
+
+    def y0(self):
+        return [counter.y0() for counter in self.counters]
+
+
+def make_counters():
+    return ManyCounters(init_counters)
 
 
 def test_counters():
-    counters = make_many_counters()
+    counters = make_counters()
 
-    counters, y = counters()
+    counters, y = counters.step()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(0), jnp.array(0)])
 
-    counters, y = counters()
+    counters, y = counters.step()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(1), jnp.array(2)])
 
-    counters, y = counters()
+    counters, y = counters.step()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(2), jnp.array(4)])
 
     counters = counters.reset()
-    counters, y = counters()
+    counters, y = counters.step()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(0), jnp.array(0)])
 
     # repeat with jit
 
     counters = counters.reset()
-    counters = eqx.filter_jit(counters)
 
-    counters, y = counters()
+    counters, y = eqx.filter_jit(counters.step)()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(0), jnp.array(0)])
 
-    counters, y = counters()
+    counters, y = eqx.filter_jit(counters.step)()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(1), jnp.array(2)])
 
-    counters, y = counters()
+    counters, y = eqx.filter_jit(counters.step)()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(2), jnp.array(4)])
 
     counters = counters.reset()
-    counters, y = counters()
+    counters, y = eqx.filter_jit(counters.step)()
     assert eqx.tree_equal(y, [jnp.array(0), jnp.array(0), jnp.array(0)])
 
 
-def test_filter_scan():
-    def scan_fn(counters, x):
-        new_counters, ys = counters()
-        return new_counters, ys
+def test_unroll():
 
-    counters = make_many_counters()
+    counters = make_counters()
+    ys = counters.unroll(jnp.zeros((3, 1)), include_y0=False)
 
-    _, ys = filter_scan_module(scan_fn, init=counters, xs=None, length=3)
-
+    # this the trajectory of the first counter
     assert eqx.tree_equal(ys[0], jnp.array([0, 0, 0]))
+    # .. the second counter ..
     assert eqx.tree_equal(ys[1], jnp.array([0, 1, 2]))
+    # and the third.
     assert eqx.tree_equal(ys[2], jnp.array([0, 2, 4]))
 
     # repeat with jit
 
     counters = counters.reset()
 
-    @eqx.filter_jit
-    def unroll(counters):
-        _, ys = filter_scan_module(scan_fn, init=counters, xs=None, length=3)
-        return ys
-
-    ys = unroll(counters)
+    ys = eqx.filter_jit(counters.unroll)(jnp.zeros((3, 1)), include_y0=False)
 
     assert eqx.tree_equal(ys[0], jnp.array([0, 0, 0]))
     assert eqx.tree_equal(ys[1], jnp.array([0, 1, 2]))
