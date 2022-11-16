@@ -10,3 +10,4 @@ from .step_fn import (
     make_step_fn_model,
 )
 from .trainer import DictLogger, ModelControllerTrainer, Tracker
+from .minibatch import make_dataloader

@@ -1,12 +1,10 @@
-from typing import TypeVar
+from typing import Any
 
 import numpy as np
 import ray
 from ray import air, tune
 
 from cc.config import disable_compile_warn, disable_tqdm
-
-T = TypeVar("T")
 
 
 def force_cpu_backend():
@@ -16,7 +14,7 @@ def force_cpu_backend():
     config.update("jax_platforms", "cpu")
 
 
-def YOUR_FUNCTION(config: dict[str, T]) -> float:
+def YOUR_FUNCTION(config: dict[str, Any]) -> float:
     # do some work
     score = config["x"] ** 2 + config["y"] * 0.7 - config["z"]
     return -float(score)

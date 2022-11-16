@@ -7,4 +7,5 @@ __pycache__
 # prefix module/notebook/folder with p_ to mark as private (to you)
 p_*
 *.pkl
+*.eqx
 results

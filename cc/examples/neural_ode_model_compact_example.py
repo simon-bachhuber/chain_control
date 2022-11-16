@@ -10,7 +10,7 @@ from ..utils import (
     make_postprocess_fn,
     sample_from_tree_of_specs,
 )
-from .nn_lib import integrate
+from .nn_lib.integrate import integrate
 
 
 def mlp_network(

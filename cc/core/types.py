@@ -23,3 +23,9 @@ T = TypeVar("T")
 
 class PyTree(Generic[T]):
     pass
+
+    def __iter__(self):
+        pass
+
+    def __next__(self):
+        pass

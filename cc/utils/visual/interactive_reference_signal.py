@@ -6,7 +6,7 @@ import jax.tree_util as jtu
 
 from cc import load
 from cc.config import ROOT_DIR
-from cc.env import make_env
+from cc.env.make_env import make_env
 from cc.utils.visual.viewer import launch_viewer_controller
 
 from cc.env.collect.source import ObservationReferenceSource

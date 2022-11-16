@@ -1,4 +1,5 @@
 from functools import partial, reduce
+from typing import Union
 
 import equinox as eqx
 import jax
@@ -29,7 +30,9 @@ def tree_insert_IMPURE(tree, subtree, batch_idxs: tuple[int, ...]):
     jax.tree_util.tree_map(insert, tree, subtree)
 
 
-def tree_concat(trees: list, along_existing_first_axis=False, backend="numpy"):
+def tree_concat(
+    trees: Union[list, tuple], along_existing_first_axis=False, backend="numpy"
+):
     if backend == "jax":
         concat = jnp.concatenate
     else:

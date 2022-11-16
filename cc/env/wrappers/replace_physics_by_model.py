@@ -69,6 +69,6 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         action = to_jax(action)
         assert action.ndim == 1
 
-        self._model, obs = eqx.filter_jit(self._model)(action)
+        self._model, obs = eqx.filter_jit(self._model.step)(action)
 
         return self._build_timestep(ts.step_type, obs)

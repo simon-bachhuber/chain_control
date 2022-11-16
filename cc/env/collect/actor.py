@@ -27,7 +27,7 @@ class ModuleActor(core.Actor):
 
         self.action_spec = action_spec
         self._adder = adder
-        self._policy = controller
+        self._controller = controller
         self.reset_key = reset_key
         self._initial_key = self._key = key
         self._jit = jit
@@ -38,10 +38,6 @@ class ModuleActor(core.Actor):
         if self._adder:
             self._adder.add_first(timestep)
 
-    def update_policy(self, new_policy: AbstractController):
-        if new_policy:
-            self._policy = new_policy.reset()
-
     def reset(self):
 
         if self.reset_key:
@@ -49,8 +45,8 @@ class ModuleActor(core.Actor):
         else:
             pass
 
-        if self._policy:
-            self._policy = self._policy.reset()
+        if self._controller:
+            self._controller = self._controller.reset()
 
         self.count = 0
         self._last_extras = None
@@ -77,9 +73,9 @@ class ModuleActor(core.Actor):
 
     def query_policy(self, obs: Observation, key: PRNGKey) -> Action:
         if self._jit:
-            self._policy, action = eqx.filter_jit(self._policy)(obs)
+            self._controller, action = eqx.filter_jit(self._controller.step)(obs)
         else:
-            self._policy, action = self._policy(obs)
+            self._controller, action = self._controller.step(obs)
         return action
 
 

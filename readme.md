@@ -1,8 +1,10 @@
-# Chain Control (cc)
-
 <p align="center">
 <img src="icons/icon2.png" height="200" />
 </p>
+
+# Chain Control (cc)
+
+<img src="icons/coverage.svg" height="20" />
 
 This package provides components to 
 - simulate kinematic chains

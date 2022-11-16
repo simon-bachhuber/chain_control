@@ -49,6 +49,11 @@ class MiniBatchState(NamedTuple):
 MiniBatchUpdateFn = Callable[[MiniBatchState], Tuple[MiniBatchState, PyTree]]
 
 
+class Dataset(NamedTuple):
+    inputs: PyTree[jnp.ndarray]
+    targets: PyTree[jnp.ndarray]
+
+
 class Dataloader(NamedTuple):
     minibatch_state: MiniBatchState
     update_fn: MiniBatchUpdateFn

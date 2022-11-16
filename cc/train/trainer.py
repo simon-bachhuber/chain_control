@@ -50,7 +50,7 @@ class Tracker:
 
 
 class Logger:
-    def log(self, metrics: dict[str, np.array]):
+    def log(self, metrics: dict[str, np.ndarray]):
         pass
 
     def get_logs(self):
@@ -61,7 +61,7 @@ class DictLogger(Logger):
     def __init__(self):
         self._logs = None
 
-    def log(self, metrics: dict[str, np.array]):
+    def log(self, metrics: dict[str, np.ndarray]):
         metrics = tree_concat([metrics])
         if self._logs is None:
             self._logs = metrics
@@ -115,7 +115,7 @@ class ModelControllerTrainer:
         self.loggers = loggers
         self.trackers = trackers
 
-    def update_pbar(self, metrics: dict[str, np.array]):
+    def update_pbar(self, metrics: dict[str, np.ndarray]):
         s = ""
         for key, value in metrics.items():
             s += "{}: {:10.4f} | ".format(key, float(np.mean(value)))

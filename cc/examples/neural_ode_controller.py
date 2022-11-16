@@ -4,7 +4,8 @@ import jax.numpy as jnp
 import jax.random as jrand
 
 from ..core import AbstractController, PyTree
-from .nn_lib import integrate, mlp_network
+from .nn_lib.integrate import integrate
+from .nn_lib.mlp_network import mlp_network
 from ..utils import (
     ArraySpecs,
     batch_concat,
@@ -104,7 +105,7 @@ def make_neural_ode_controller(
             u, key = u
 
             if has_time_state:
-                (x, t) = self.state
+                (x, t) = self.state  # pytype: disable=attribute-error
             else:
                 x = self.state
                 t = jnp.array(0.0)

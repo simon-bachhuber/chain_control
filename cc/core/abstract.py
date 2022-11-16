@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Callable
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -80,7 +80,7 @@ class AbstractController(eqx.Module, ABC):
     def reset(self) -> "AbstractController":
         pass
 
-    def unroll(self, model: AbstractModel, merge_x_y: callable) -> callable:
+    def unroll(self, model: AbstractModel, merge_x_y: Callable) -> Callable:
         def unroll_closed_loop(
             time_series_of_x: PyTree[jnp.ndarray],
         ) -> PyTree[jnp.ndarray]:

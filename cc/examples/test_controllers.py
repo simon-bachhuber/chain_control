@@ -1,7 +1,6 @@
 from ..env import make_env
 from ..env.collect import collect, sample_feedforward_collect_and_make_source
 from ..env.wrappers import AddRefSignalRewardFnWrapper
-from ..utils.legacy_wrapper import WrapController
 from .feedforward_controller import make_feedforward_controller
 
 # from .neural_ode_controller import make_neural_ode_controller
@@ -27,4 +26,4 @@ def test_controllers():
     ]
 
     for controller in controllers:
-        collect(env_w_source, WrapController(controller))
+        collect(env_w_source, controller)

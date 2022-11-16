@@ -10,8 +10,8 @@ import optax
 
 from ..core import AbstractController, AbstractModel, PyTree
 from ..core.module_utils import flatten_module
-from .minibatch import Dataloader, MiniBatchState
 from ..utils import batch_concat, mse, tree_concat
+from .minibatch import Dataloader, MiniBatchState
 
 REGU_FN = Callable[[jnp.ndarray], dict[str, float]]
 METRIC_FN = Callable[[PyTree, PyTree], dict[str, float]]
@@ -20,7 +20,7 @@ LOSS_FN = METRIC_FN
 
 @dataclass
 class EvaluationMetrices:
-    data: PyTree
+    data: PyTree[jnp.ndarray]
     metrices: tuple[METRIC_FN]
 
 
@@ -34,12 +34,16 @@ class Regularisation:
 class TrainingOptionsModel:
     training_data: Dataloader
     optimizer: optax.GradientTransformation
-    metrices: tuple[EvaluationMetrices] = ()
-    regularisers: tuple[Regularisation] = ()
+    metrices: tuple[
+        EvaluationMetrices
+    ] = tuple()  # pytype: disable=annotation-type-mismatch
+    regularisers: tuple[
+        Regularisation
+    ] = tuple()  # pytype: disable=annotation-type-mismatch
     loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
 
 
-def compute_regularisers(model_or_controller, regularisers: list[Regularisation]):
+def compute_regularisers(model_or_controller, regularisers: tuple[Regularisation]):
     if len(regularisers) == 0:
         return 0.0, {}
 
@@ -47,19 +51,21 @@ def compute_regularisers(model_or_controller, regularisers: list[Regularisation]
 
     regu_value, log_of_regus = 0.0, {}
     for regu in regularisers:
-        this_value = regu.prefactor * regu.reduce_weights(flat_module)
+        this_value = regu.reduce_weights(flat_module)
         log_of_regus.update(this_value)
-        regu_value += batch_concat(this_value, 0)
+
+        this_value_flat = batch_concat(this_value, 0)
+        regu_value += regu.prefactor * this_value_flat
     return regu_value, log_of_regus
 
 
-def eval_metrices(model, metrices: list[EvaluationMetrices]):
+def eval_metrices(model, metrices: tuple[EvaluationMetrices]):
     if len(metrices) == 0:
         return {}
 
     log_of_metrices = {}
     for metric in metrices:
-        (inputs, targets) = metric.data
+        (inputs, targets) = metric.data  # pytype: disable=attribute-error
         preds = eqx.filter_vmap(model.unroll)(inputs)
         for metric_fn in metric.metrices:
             this_value = metric_fn(preds, targets)
@@ -92,7 +98,7 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
         for _ in range(minibatch_state.n_minibatches):
             minibatch_state, (inputs, targets) = options.training_data.update_fn(
                 minibatch_state
-            )
+            )  # pytype: disable=attribute-error
             (loss, logs), grads = loss_fn_model(model, inputs, targets)
             logs.update(dict(train_loss=loss))
             minibatched_logs.append(logs)
@@ -127,7 +133,9 @@ def merge_x_y(x, y):
 class TrainingOptionsController:
     refss: Dataloader  # Batched TimeSeries of References
     optimizer: optax.GradientTransformation
-    regularisers: tuple[Regularisation] = ()
+    regularisers: tuple[
+        Regularisation
+    ] = tuple()  # pytype: disable=annotation-type-mismatch
     merge_x_y: Callable[[PyTree, PyTree], OrderedDict] = merge_x_y
     loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
 
@@ -140,7 +148,7 @@ def make_step_fn_controller(
     @ft.partial(
         eqx.filter_value_and_grad, arg=controller.grad_filter_spec(), has_aux=True
     )
-    def loss_fn_controller(controller: AbstractModel, refss):
+    def loss_fn_controller(controller: AbstractController, refss):
         logs = {}
         refsshat = eqx.filter_vmap(controller.unroll(model, merge_x_y))(refss)
         loss_value = options.loss_fn(refss, refsshat)
