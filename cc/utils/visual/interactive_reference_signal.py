@@ -5,7 +5,6 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 
 from cc import load
-from cc.config import ROOT_DIR
 from cc.env.make_env import make_env
 from cc.utils.visual.viewer import launch_viewer_controller
 
@@ -13,8 +12,7 @@ from cc.env.collect.source import ObservationReferenceSource
 from cc.env.wrappers import AddRefSignalRewardFnWrapper, TimelimitControltimestepWrapper
 
 env = make_env("two_segments_v2", random=1, time_limit=10.0)  # <- CHANGE THIS LINE
-controller = load(ROOT_DIR.joinpath("ctrb_v2.pkl"))  # <- CHANGE THIS LINE
-JIT = False  # <- CHANGE THIS LINE
+controller = load("ctrb_v2.pkl")  # <- CHANGE THIS LINE
 
 
 # SCRIPT BEGINS HERE
@@ -46,7 +44,7 @@ def make_interactive_env(pipe_conn, env: TimelimitControltimestepWrapper):
 
 def launch_viewer(shared_reference_signal):
     env_w_shared_value = make_interactive_env(shared_reference_signal, env)
-    launch_viewer_controller(env_w_shared_value, controller, jit=JIT)
+    launch_viewer_controller(env_w_shared_value, controller)
 
 
 p1 = Process(target=launch_viewer, args=[shared_reference_signal])
