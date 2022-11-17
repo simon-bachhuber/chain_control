@@ -3,9 +3,5 @@ __pycache__
 .vscode
 .pytype*
 .pytest*
-
-# prefix module/notebook/folder with p_ to mark as private (to you)
-p_*
 *.pkl
 *.eqx
-results
