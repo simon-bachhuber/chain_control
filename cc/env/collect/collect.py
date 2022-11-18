@@ -13,7 +13,6 @@ from ...core.types import TimeSeriesOfAct
 from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
 from ...utils import to_jax, to_numpy, tree_concat, tree_shape
-from ...core.types import BatchedTimeSeriesOfRef
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from .actor import ModuleActor
 from .source import (
@@ -102,7 +101,7 @@ def sample_feedforward_collect_and_make_source(
         samples.append(sample)
 
     sample = concat_samples(*samples)
-    source = ObservationReferenceSource(ts, sample.obs, sample.action)
+    source = ObservationReferenceSource(sample.obs, ts, sample.action)
     return source, sample
 
 
@@ -116,4 +115,4 @@ def collect_random_step_source(env: dm_env.Environment, seeds: list[int]):
 
     _yss = OrderedDict()
     _yss["xpos_of_segment_end"] = yss
-    return ObservationReferenceSource(ts, BatchedTimeSeriesOfRef(_yss))
+    return ObservationReferenceSource(_yss, ts=ts)

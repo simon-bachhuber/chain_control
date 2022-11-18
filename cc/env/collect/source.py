@@ -1,8 +1,6 @@
-import copy
 from typing import Optional
 
-import jax
-import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
@@ -13,34 +11,27 @@ from ...core.types import (
     BatchedTimeSeriesOfRef,
     TimeSeriesOfRef,
 )
-from ...utils import to_numpy, tree_slice
+from ...utils import to_jax, to_numpy, tree_slice
 
 
 class ObservationReferenceSource(AbstractObservationReferenceSource):
     def __init__(
         self,
-        ts: jnp.ndarray,
         yss: BatchedTimeSeriesOfRef,
+        ts: Optional[np.ndarray] = None,
         uss: Optional[BatchedTimeSeriesOfAct] = None,
-        i_actor=0,
-        reference_transform=lambda arr: arr,
+        i_actor: int = 0,
     ):
         self._i_actor = i_actor
-        self._ts = ts
-        self._yss = yss
-        self._uss = uss
-        self._reference_transform = reference_transform
+        self._ts = to_numpy(ts) if ts is not None else None
+        self._yss = to_numpy(yss)
+        self._uss = to_numpy(uss) if uss is not None else None
 
-    def set_reference_transform(self, transform):
-        self._reference_transform = transform
-
-    def get_references_for_optimisation_untransformed(self) -> BatchedTimeSeriesOfRef:
-        transform = lambda arr: jnp.atleast_3d(arr)
-        return jax.tree_util.tree_map(transform, self._yss)
+    def get_references(self) -> BatchedTimeSeriesOfRef:
+        return jtu.tree_map(np.atleast_3d, self._yss)
 
     def get_references_for_optimisation(self) -> BatchedTimeSeriesOfRef:
-        transform = lambda arr: jax.vmap(self._reference_transform)(jnp.atleast_3d(arr))
-        return jax.tree_util.tree_map(transform, self._yss)
+        return to_jax(self.get_references())
 
     def get_reference_actor(self) -> TimeSeriesOfRef:
         return tree_slice(self.get_references_for_optimisation(), start=self._i_actor)
@@ -66,24 +57,39 @@ def draw_u_from_cosines(ts, seed):
     return np.cos(omega * ts)[:, None] * np.sqrt(freq)
 
 
-def _constant_after_transform(refs: jnp.ndarray, idx, new_ts):
-    N = len(new_ts) + 1
-    refs_out = jnp.zeros((N, refs.shape[1]))
-    refs_out = refs_out.at[:idx].set(refs[:idx])
-    refs_out = refs_out.at[idx:].set(refs[idx])
-    return refs_out
-
-
 def constant_after_transform_source(
-    source: ObservationReferenceSource, after_T: float, new_ts: jnp.ndarray = None
+    source: ObservationReferenceSource, after_time: float, new_time_limit: float = None
 ) -> ObservationReferenceSource:
-    if new_ts is None:
-        new_ts = source._ts
 
-    source = copy.deepcopy(source)
-    idx = jnp.where(new_ts == after_T)[0][0]
-    transform = lambda arr: _constant_after_transform(arr, idx, new_ts)
-    source.set_reference_transform(transform)
-    return ObservationReferenceSource(
-        new_ts, to_numpy(source.get_references_for_optimisation())
+    if source._ts is None:
+        raise Exception(
+            """Explicitly specify the argument `ts` during `ObservationReferenceSource`
+            creation else this function can not be used."""
+        )
+
+    old_time_limit = source._ts[-1] + source._ts[1]
+
+    if new_time_limit is not None and new_time_limit < old_time_limit:
+        raise Exception(
+            f"""`new_time_limit` can not be smaller than the old time limit
+            but got {new_time_limit} < {old_time_limit}."""
+        )
+
+    if new_time_limit is None:
+        new_time_limit = old_time_limit
+
+    control_timestep = source._ts[1]
+
+    new_ts = np.arange(0.0, new_time_limit, step=control_timestep)
+    switch_idx = np.where(new_ts == after_time)[0][0]
+
+    new_yss = jtu.tree_map(
+        lambda arr: np.pad(
+            arr[:, :switch_idx],
+            ((0, 0), (0, len(new_ts) - switch_idx + 1), (0, 0)),
+            mode="edge",
+        ),
+        source.get_references(),
     )
+
+    return ObservationReferenceSource(new_yss, new_ts, source._i_actor)
