@@ -26,7 +26,7 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         self._source = source
 
         if source._ts is not None:
-            assert np.all(np.asarray(environment.ts), source._ts)
+            assert np.all(np.asarray(environment.ts) == source._ts)
 
         reward_spec = environment.reward_spec()
         assert reward_spec.shape == ()
