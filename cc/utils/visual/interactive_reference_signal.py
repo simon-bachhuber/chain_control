@@ -21,8 +21,8 @@ shared_reference_signal = Value("d", 0.0)
 
 
 class InteractiveSource(ObservationReferenceSource):
-    def __init__(self, ts: jnp.ndarray, yss, shared_value):
-        super().__init__(ts, yss)
+    def __init__(self, yss, ts, shared_value):
+        super().__init__(yss, ts)
         self._shared_value = shared_value
 
     def get_reference_actor(self):
@@ -37,7 +37,7 @@ def make_interactive_env(pipe_conn, env: TimelimitControltimestepWrapper):
     ys_ones = jtu.tree_map(
         lambda arr: jnp.ones((1, N, *arr.shape)), env.observation_spec()
     )
-    source = InteractiveSource(ts, ys_ones, pipe_conn)
+    source = InteractiveSource(ys_ones, ts, pipe_conn)
     env = AddRefSignalRewardFnWrapper(env, source)
     return env
 
