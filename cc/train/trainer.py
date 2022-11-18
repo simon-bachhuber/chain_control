@@ -42,11 +42,14 @@ class Tracker:
             self._associated_metric = current_metric
             self._best_model = model
 
-    def best_model(self):
+    def best_model_or_controller(self):
         return self._best_model
 
     def best_metric(self):
         return self._associated_metric
+
+    def log_entry(self):
+        return {self.metric_key: self.best_metric()}
 
 
 class Logger:
@@ -151,6 +154,12 @@ class ModelControllerTrainer:
         for i in self.pbar:
             logs = self.step(i)
             self.update_pbar(logs)
+
+    def get_tracker_logs(self):
+        logs = []
+        for tracker in self.trackers:
+            logs.append(tracker.log_entry())
+        return logs
 
     def get_logs(self):
         logs = []
