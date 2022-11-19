@@ -33,7 +33,7 @@ setuptools.setup(
     version="0.1.0",
     package_data={
         "cc": find_data_files(
-            "cc", patterns=["*.xml", "*.m"]
+            "cc", patterns=["*.xml", "*.m", "*.eqx"]
         )  # .m is not required right now
     },
     include_package_data=True,
