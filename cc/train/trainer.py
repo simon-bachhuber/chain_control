@@ -84,7 +84,7 @@ class ModelControllerTrainer:
         controller: Optional[AbstractController] = None,
         model_train_options: Optional[TrainingOptionsModel] = None,
         controller_train_options: Optional[TrainingOptionsController] = None,
-        loggers: list[Logger] = [],
+        loggers: list[Logger] = [DictLogger()],
         trackers: list[Tracker] = [],
         jit: bool = True,
     ):
