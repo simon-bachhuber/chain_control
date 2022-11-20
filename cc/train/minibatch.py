@@ -59,6 +59,8 @@ class Dataloader(NamedTuple):
     update_fn: MiniBatchUpdateFn
 
 
+# TODO `data` is incorrectly typed; should be `PyTree[np.ndarray]`;
+# use `to_jax` explicitly and not some implicit promotion
 def make_dataloader(
     data: PyTree[jnp.ndarray],
     key: PRNGKey,

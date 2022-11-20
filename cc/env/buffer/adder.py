@@ -64,7 +64,7 @@ class Adder(AbstractAdder):
             self._prev_ts,
             action,
             next_timestep,
-            None,
+            None,  # the buffer sets the `prev`-field
             self._actor_id,
             self._episode_id,
             self._timestep_id,
