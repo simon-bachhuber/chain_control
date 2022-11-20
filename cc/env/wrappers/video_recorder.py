@@ -20,6 +20,7 @@ class RecordVideoWrapper(EnvironmentWrapper):
         width: int = 640,
         height: int = 480,
         video_name: Optional[str] = None,
+        path_to_folder: str = "./videos",
         cleanup_imgs: bool = False,
     ):
         """Wraps a `dm_env.Environment` and records a video.
@@ -43,6 +44,10 @@ class RecordVideoWrapper(EnvironmentWrapper):
         super().__init__(environment)
         assert control_rate == 100
         assert control_rate % fps == 0
+        assert (
+            not cleanup_imgs
+        ), """Please do this manually for now.
+        The current implementation seems too dangerous."""
         self._cleanup_imgs = cleanup_imgs
         self._frames = []
         self._record_every = record_every
@@ -51,7 +56,8 @@ class RecordVideoWrapper(EnvironmentWrapper):
         self._record_frame_every = control_rate // fps
         self._env_step = 0
         self._fps = fps
-        self._path = pathlib.Path("./videos")
+        self._path_to_folder = pathlib.Path(path_to_folder)
+        self._path_to_folder.mkdir(exist_ok=True, parents=True)
         self._video_name = video_name
         self._width = width
         self._height = height
@@ -89,23 +95,20 @@ class RecordVideoWrapper(EnvironmentWrapper):
         return frames.transpose((0, 3, 1, 2))
 
     def _make_video(self):
-        self._path.mkdir(exist_ok=True, parents=True)
-
         if self._video_name:
             video_name_const = self._video_name
         else:
             video_name_const = "episode"
 
         video_name = f"{video_name_const}_{self._number_of_episodes-1}.mp4"
-        prefix = str(self._path)
+        prefix = str(self._path_to_folder)
 
         for i, frame in enumerate(self._frames):
             i = str(i).zfill(3)
             Image.fromarray(frame).save(f"{prefix}/frame{i}.png")
 
         call(
-            f"ffmpeg -r {self._fps} -i {prefix}/frame%03d.png -y {prefix}/{video_name} \
-                > /dev/null",
+            f"ffmpeg -r {self._fps} -i {prefix}/frame%03d.png -y {prefix}/{video_name}",
             stdout=DEVNULL,
             stderr=STDOUT,
             shell=True,
