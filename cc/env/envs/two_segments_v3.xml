@@ -18,7 +18,7 @@
     <light name="light" pos="0 0 36"/>
     
     <camera name="lookatchain" mode="targetbody" target="cart" pos="0 -6 1"/>
-    <camera name="skyview" pos="0 -25 20" euler="50 0 0"/>
+    <camera name="skyview" pos="0 -20 18" euler="50 0 0"/>
     
     <geom name="floor" pos="0 0 -.25" size="100 100 .2" type="plane" material="grid"/>
     <geom name="rail1" type="capsule" pos="0  .07 2" zaxis="1 0 0" size="0.02 20" material="decoration" />
