@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Tuple, Union
+from typing import Sequence, Tuple, Union
 
 import dm_env
 import numpy as np
@@ -14,6 +14,7 @@ from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
 from ...utils import to_jax, to_numpy, tree_concat, tree_shape
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
+from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor
 from .source import (
     ObservationReferenceSource,
@@ -30,8 +31,8 @@ def sample_feedforward_and_collect(
     env: dm_env.Environment, seeds_gp: list[int], seeds_cos: list[Union[int, float]]
 ) -> ReplaySample:
 
-    _, sample_gp = sample_feedforward_collect_and_make_source(env, seeds=seeds_gp)
-    _, sample_cos = sample_feedforward_collect_and_make_source(
+    _, sample_gp, _ = sample_feedforward_collect_and_make_source(env, seeds=seeds_gp)
+    _, sample_cos, _ = sample_feedforward_collect_and_make_source(
         env, draw_u_from_cosines, seeds=seeds_cos
     )
 
@@ -41,7 +42,8 @@ def sample_feedforward_and_collect(
 def collect_exhaust_source(
     env: dm_env.Environment,
     controller: AbstractController,
-) -> ReplaySample:
+    observers: Sequence[EnvLoopObserver] = (),
+) -> Tuple[ReplaySample, dict]:
 
     assert isinstance(env, AddRefSignalRewardFnWrapper)
     source = env._source
@@ -49,19 +51,24 @@ def collect_exhaust_source(
     N = tree_shape(source._yss)
     # collect performance of controller in environment
     pbar = tqdm(range(N), desc="Reference Iterator", disable=not use_tqdm())
-    samples = []
+    samples, loop_results = [], []
     for i_actor in pbar:
         source.change_reference_of_actor(i_actor)
-        sample = collect(env, controller)
+        sample, loop_result = collect(env, controller, observers)
         samples.append(sample)
+        loop_results.append(loop_result)
 
     # concat samples
     sample = concat_samples(*samples)
 
-    return sample
+    return sample, tree_concat(loop_results)
 
 
-def collect(env: dm_env.Environment, controller: AbstractController) -> ReplaySample:
+def collect(
+    env: dm_env.Environment,
+    controller: AbstractController,
+    observers: Sequence[EnvLoopObserver] = (),
+) -> Tuple[ReplaySample, dict]:
 
     env.reset()
 
@@ -74,11 +81,11 @@ def collect(env: dm_env.Environment, controller: AbstractController) -> ReplaySa
     actor = ModuleActor(
         controller=controller, action_spec=env.action_spec(), adder=adder
     )
-    loop = EnvironmentLoop(env, actor, logger=loggers.NoOpLogger())
-    loop.run_episode()
+    loop = EnvironmentLoop(env, actor, logger=loggers.NoOpLogger(), observers=observers)
+    loop_result = loop.run_episode()
     sample = next(iterator)
     buffer.close()
-    return sample
+    return sample, loop_result
 
 
 def sample_feedforward_collect_and_make_source(
@@ -87,22 +94,24 @@ def sample_feedforward_collect_and_make_source(
     seeds: list[int] = [
         0,
     ],
-) -> Tuple[ObservationReferenceSource, ReplaySample]:
+    observers: Sequence[EnvLoopObserver] = (),
+) -> Tuple[ObservationReferenceSource, ReplaySample, dict]:
 
     assert len(seeds) > 0
 
     ts = env.ts
 
-    samples = []
+    samples, loop_results = [], []
     for seed in seeds:
         us: TimeSeriesOfAct = to_jax(draw_fn(to_numpy(ts), seed=seed))
         controller = make_feedforward_controller(us)
-        sample = collect(env, controller)
+        sample, loop_result = collect(env, controller, observers)
         samples.append(sample)
+        loop_results.append(loop_result)
 
     sample = concat_samples(*samples)
     source = ObservationReferenceSource(sample.obs, ts, sample.action)
-    return source, sample
+    return source, sample, tree_concat(loop_results)
 
 
 def collect_random_step_source(env: dm_env.Environment, seeds: list[int]):

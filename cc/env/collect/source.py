@@ -58,8 +58,12 @@ def draw_u_from_cosines(ts, seed):
 
 
 def constant_after_transform_source(
-    source: ObservationReferenceSource, after_time: float, new_time_limit: float = None
+    source: ObservationReferenceSource, after_time: Optional[float] = None, new_time_limit: Optional[float] = None
 ) -> ObservationReferenceSource:
+
+    if after_time is None and new_time_limit is None:
+        # do nothing
+        return source 
 
     if source._ts is None:
         raise Exception(
@@ -80,8 +84,14 @@ def constant_after_transform_source(
 
     control_timestep = source._ts[1]
 
+    if after_time is None:
+        # never becomes constant
+        after_time = new_time_limit - control_timestep
+
     new_ts = np.arange(0.0, new_time_limit, step=control_timestep)
-    switch_idx = np.where(new_ts == after_time)[0][0]
+    # TODO 
+    # exact equality does not work for some reason..
+    switch_idx = np.where(np.isclose(new_ts, after_time))[0][0]
 
     new_yss = jtu.tree_map(
         lambda arr: np.pad(
