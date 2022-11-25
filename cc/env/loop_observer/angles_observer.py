@@ -7,6 +7,9 @@ from .observer import EnvLoopObserver
 
 
 class AnglesEnvLoopObserver(EnvLoopObserver):
+    def __init__(self) -> None:
+        self._hinge_1, self._hinge_2 = [], []  # for pytype ..
+
     def _get_hinges_and_append(self, env):
         hinge1, hinge2 = env.physics.named.data.qpos[["hinge_1", "hinge_2"]]
         self._hinge_1.append(hinge1)
