@@ -40,13 +40,16 @@ class ObservationReferenceSource(AbstractObservationReferenceSource):
         self._i_actor = i_actor
 
 
-default_kernel = 0.2 * RBF(1.5)
+default_kernel = 0.15 * RBF(0.75)
 
 
-def draw_u_from_gaussian_process(ts, kernel=default_kernel, seed=1):
+def draw_u_from_gaussian_process(
+    ts, kernel=default_kernel, seed=1, scale_u_by: float = 0.25
+):
     ts = ts[:, np.newaxis]
     us = GaussianProcessRegressor(kernel=kernel).sample_y(ts, random_state=seed)
     us = (us - np.mean(us)) / np.std(us)
+    us *= scale_u_by
     return us.astype(np.float32)
 
 
@@ -58,12 +61,14 @@ def draw_u_from_cosines(ts, seed):
 
 
 def constant_after_transform_source(
-    source: ObservationReferenceSource, after_time: Optional[float] = None, new_time_limit: Optional[float] = None
+    source: ObservationReferenceSource,
+    after_time: Optional[float] = None,
+    new_time_limit: Optional[float] = None,
 ) -> ObservationReferenceSource:
 
     if after_time is None and new_time_limit is None:
         # do nothing
-        return source 
+        return source
 
     if source._ts is None:
         raise Exception(
@@ -89,7 +94,7 @@ def constant_after_transform_source(
         after_time = new_time_limit - control_timestep
 
     new_ts = np.arange(0.0, new_time_limit, step=control_timestep)
-    # TODO 
+    # TODO
     # exact equality does not work for some reason..
     switch_idx = np.where(np.isclose(new_ts, after_time))[0][0]
 
