@@ -22,3 +22,7 @@ def flatten_module(model_or_controller) -> jnp.ndarray:
         eqx.filter(model_or_controller, model_or_controller.grad_filter_spec())
     )
     return batch_concat(params, 0)
+
+
+def number_of_params(model_or_controller) -> int:
+    return len(flatten_module(model_or_controller))
