@@ -4,14 +4,14 @@ import jax.numpy as jnp
 import jax.random as jrand
 
 from ..core import AbstractController, PyTree
-from .nn_lib.integrate import integrate
-from .nn_lib.mlp_network import mlp_network
 from ..utils import (
     ArraySpecs,
     batch_concat,
     make_postprocess_fn,
     sample_from_tree_of_specs,
 )
+from .nn_lib.integrate import integrate
+from .nn_lib.mlp_network import mlp_network
 
 
 def make_neural_ode_controller(
