@@ -44,9 +44,7 @@ class RecordVideoWrapper(EnvironmentWrapper):
         super().__init__(environment)
         assert control_rate == 100
         assert control_rate % fps == 0
-        assert (
-            not cleanup_imgs
-        ), """Please do this manually for now.
+        assert not cleanup_imgs, """Please do this manually for now.
         The current implementation seems too dangerous."""
         self._cleanup_imgs = cleanup_imgs
         self._frames = []
