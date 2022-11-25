@@ -2,9 +2,9 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax.flatten_util import ravel_pytree
-from .tree import batch_concat
 
 from .sample_from_spec import sample_from_tree_of_specs
+from .tree import batch_concat
 
 
 def to_jax(tree):
@@ -44,6 +44,14 @@ def mse(y, yhat):
     return jnp.mean((y - yhat) ** 2)
 
 
+def weighted_mse(y, yhat, weights):
+    y, yhat = batch_concat(y, 0), batch_concat(yhat, 0)
+    se = (y - yhat) ** 2
+    # moves batchaxis to the right; multiply and sum over it
+    sse = jnp.sum(weights * jnp.moveaxis(se, 0, -1), axis=-1)
+    return jnp.mean(sse)
+
+
 def rmse(y, yhat):
     return jnp.sqrt(mse(y, yhat))
 
@@ -52,7 +60,7 @@ def primes(n: int) -> list[int]:
     """Find factorization of integer. Slow implementation."""
     primfac = []
     d = 2
-    while d*d <= n:
+    while d * d <= n:
         while (n % d) == 0:
             primfac.append(d)  # supposing you want multiple factors repeated
             n //= d
