@@ -107,4 +107,4 @@ def constant_after_transform_source(
         source.get_references(),
     )
 
-    return ObservationReferenceSource(new_yss, new_ts, source._i_actor)
+    return ObservationReferenceSource(new_yss, new_ts, i_actor=source._i_actor)
