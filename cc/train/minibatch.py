@@ -1,12 +1,13 @@
 import functools as ft
-from typing import Callable, NamedTuple, Optional, Tuple
+from typing import Callable, NamedTuple, Optional, Tuple, Union
 
 import jax
 import jax.numpy as jnp
 import jax.random as jrand
+import numpy as np
 
 from ..core import PRNGKey, PyTree
-from ..utils import tree_indices, tree_shape
+from ..utils import to_jax, tree_indices, tree_shape
 
 
 @ft.partial(jax.jit, static_argnums=(1, 2))
@@ -46,12 +47,26 @@ class MiniBatchState(NamedTuple):
     key: PRNGKey
 
 
-MiniBatchUpdateFn = Callable[[MiniBatchState], Tuple[MiniBatchState, PyTree]]
+class SupervisedDataset(NamedTuple):
+    inputs: PyTree
+    targets: PyTree
 
 
-class Dataset(NamedTuple):
-    inputs: PyTree[jnp.ndarray]
-    targets: PyTree[jnp.ndarray]
+class SupervisedDatasetWithWeights(NamedTuple):
+    inputs: PyTree
+    targets: PyTree
+    weights: np.ndarray
+
+
+class UnsupervisedDataset(NamedTuple):
+    refss: PyTree
+
+
+Dataset = Union[SupervisedDataset, SupervisedDatasetWithWeights, UnsupervisedDataset]
+MiniBatchUpdateFn = Callable[
+    [MiniBatchState],
+    Tuple[MiniBatchState, Union[SupervisedDatasetWithWeights, UnsupervisedDataset]],
+]
 
 
 class Dataloader(NamedTuple):
@@ -59,18 +74,33 @@ class Dataloader(NamedTuple):
     update_fn: MiniBatchUpdateFn
 
 
-# TODO `data` is incorrectly typed; should be `PyTree[np.ndarray]`;
-# use `to_jax` explicitly and not some implicit promotion
 def make_dataloader(
-    data: PyTree[jnp.ndarray],
+    dataset: Dataset,
     key: PRNGKey,
     n_minibatches: int = 1,
     axis: int = 0,
     reshuffle: bool = True,
     tree_transform: Optional[Callable] = None,
 ) -> Dataloader:
+
+    if not isinstance(
+        dataset, (SupervisedDataset, SupervisedDatasetWithWeights, UnsupervisedDataset)
+    ):
+        raise ValueError(
+            "`dataset` should be either a `SupervisedDataset`, \
+        `SupervisedDatasetWithWeights` or `UnsupervisedDataset`."
+        )
+
+    bs = tree_shape(dataset, axis)
+
+    if isinstance(dataset, SupervisedDataset):
+        dataset = SupervisedDatasetWithWeights(
+            dataset.inputs, dataset.targets, np.ones((bs,))
+        )
+
+    dataset = to_jax(dataset)
+
     def init_minibatch_state():
-        bs = tree_shape(data, axis)
         assert bs % n_minibatches == 0
         minibatch_size = bs // n_minibatches
         inner_key, consume = jrand.split(key)
@@ -85,7 +115,11 @@ def make_dataloader(
         )
 
     # closures `data`
-    def update_fn(state: MiniBatchState) -> Tuple[MiniBatchState, PyTree]:
+    def update_fn(
+        state: MiniBatchState,
+    ) -> Tuple[
+        MiniBatchState, Union[SupervisedDatasetWithWeights, UnsupervisedDataset]
+    ]:
 
         indices = state.indices
         key = state.key
@@ -98,7 +132,7 @@ def make_dataloader(
         # reset counter if required
         i = state.i % state.n_minibatches
 
-        batch_of_tree = tree_indices(data, indices[i], axis)
+        batch_of_tree = tree_indices(dataset, indices[i], axis)
 
         if tree_transform:
             key, consume = jrand.split(key)

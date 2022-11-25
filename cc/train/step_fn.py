@@ -11,11 +11,29 @@ import optax
 from ..core import AbstractController, AbstractModel, PyTree
 from ..core.module_utils import flatten_module
 from ..utils import batch_concat, mse, tree_concat
-from .minibatch import Dataloader, MiniBatchState
+from .minibatch import (
+    Dataloader,
+    MiniBatchState,
+    SupervisedDatasetWithWeights,
+    UnsupervisedDataset,
+)
 
+# FOR EXAMPLE
+# vector of parameters -> {"l2_norm": l2_norm(vector of parameters)}
 REGU_FN = Callable[[jnp.ndarray], dict[str, float]]
+
+# FOR EXAMPLE
+# y, yhat -> {"rmse": rmse(y, yhat)}
 METRIC_FN = Callable[[PyTree, PyTree], dict[str, float]]
-LOSS_FN = METRIC_FN
+
+# FOR EXAMPLE
+# y, yhat, weights -> {"train_mse": mse(y, yhat)}
+# weights will be a vector of floats with shape (mini-batchsize,)
+LOSS_FN_MODEL = Callable[[PyTree, PyTree, jnp.ndarray], dict[str, float]]
+
+# FOR EXAMPLE
+# y, yhat -> {"train_mse": mse(y, yhat)}
+LOSS_FN_CONTROLLER = Callable[[PyTree, PyTree], dict[str, float]]
 
 
 @dataclass
@@ -40,7 +58,7 @@ class TrainingOptionsModel:
     regularisers: tuple[
         Regularisation
     ] = tuple()  # pytype: disable=annotation-type-mismatch
-    loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
+    loss_fn: LOSS_FN_MODEL = lambda y, yhat, weights: dict(train_mse=mse(y, yhat))
 
 
 def compute_regularisers(model_or_controller, regularisers: tuple[Regularisation]):
@@ -76,10 +94,10 @@ def eval_metrices(model, metrices: tuple[EvaluationMetrices]):
 
 def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
     @ft.partial(eqx.filter_value_and_grad, arg=model.grad_filter_spec(), has_aux=True)
-    def loss_fn_model(model: AbstractModel, inputs, targets):
+    def loss_fn_model(model: AbstractModel, inputs, targets, weights):
         logs = {}
         preds = eqx.filter_vmap(model.unroll)(inputs)
-        loss_value = options.loss_fn(targets, preds)
+        loss_value = options.loss_fn(targets, preds, weights)
         logs.update(loss_value)
 
         regu_value, log_of_regus = compute_regularisers(model, options.regularisers)
@@ -96,10 +114,16 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
 
         minibatched_logs = []
         for _ in range(minibatch_state.n_minibatches):
-            minibatch_state, (inputs, targets) = options.training_data.update_fn(
+            minibatch_state, minibatched_dataset = options.training_data.update_fn(
                 minibatch_state
-            )  # pytype: disable=attribute-error
-            (loss, logs), grads = loss_fn_model(model, inputs, targets)
+            )
+            assert isinstance(minibatched_dataset, SupervisedDatasetWithWeights)
+            (loss, logs), grads = loss_fn_model(
+                model,
+                minibatched_dataset.inputs,
+                minibatched_dataset.targets,
+                minibatched_dataset.weights,
+            )
             logs.update(dict(train_loss=loss))
             minibatched_logs.append(logs)
 
@@ -137,7 +161,7 @@ class TrainingOptionsController:
         Regularisation
     ] = tuple()  # pytype: disable=annotation-type-mismatch
     merge_x_y: Callable[[PyTree, PyTree], OrderedDict] = merge_x_y
-    loss_fn: LOSS_FN = lambda y, yhat: dict(train_mse=mse(y, yhat))
+    loss_fn: LOSS_FN_CONTROLLER = lambda y, yhat: dict(train_mse=mse(y, yhat))
 
 
 def make_step_fn_controller(
@@ -173,7 +197,8 @@ def make_step_fn_controller(
         minibatched_logs = []
         for i in range(minibatch_state.n_minibatches):
             minibatch_state, batch_of_refss = options.refss.update_fn(minibatch_state)
-            (loss, logs), grads = loss_fn_controller(controller, batch_of_refss)
+            assert isinstance(batch_of_refss, UnsupervisedDataset)
+            (loss, logs), grads = loss_fn_controller(controller, batch_of_refss.refss)
             logs.update(dict(train_loss=loss))
             minibatched_logs.append(logs)
 

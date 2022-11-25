@@ -13,9 +13,11 @@ from cc.train import (
     EvaluationMetrices,
     ModelControllerTrainer,
     Regularisation,
+    SupervisedDataset,
     Tracker,
     TrainingOptionsController,
     TrainingOptionsModel,
+    UnsupervisedDataset,
     make_dataloader,
 )
 from cc.utils import l2_norm, rmse
@@ -46,7 +48,7 @@ def test_trainer():
     )
 
     model_train_dataloader = make_dataloader(
-        (sample_train.action, sample_train.obs),  # <- (X, y)
+        SupervisedDataset(sample_train.action, sample_train.obs),  # <- (X, y)
         jrand.PRNGKey(
             2,
         ),
@@ -82,7 +84,7 @@ def test_trainer():
         trackers=[Tracker("val_rmse")],
     )
     model_trainer.run(1)
-    fitted_model = model_trainer.trackers[0].best_model()
+    fitted_model = model_trainer.trackers[0].best_model_or_controller()
 
     source = collect_random_step_source(env, seeds=list(range(1)))
     env_w_source = AddRefSignalRewardFnWrapper(env, source)
@@ -95,7 +97,7 @@ def test_trainer():
     )
 
     controller_dataloader = make_dataloader(
-        source.get_references_for_optimisation(),
+        UnsupervisedDataset(source.get_references_for_optimisation()),
         jrand.PRNGKey(
             1,
         ),
