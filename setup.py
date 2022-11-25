@@ -30,7 +30,7 @@ def find_data_files(package_dir, patterns, excludes=()):
 setuptools.setup(
     name="chain_control",
     packages=setuptools.find_packages(),
-    version="0.1.0",
+    version="0.1.2",
     package_data={
         "cc": find_data_files(
             "cc", patterns=["*.xml", "*.m", "*.eqx"]
@@ -40,7 +40,7 @@ setuptools.setup(
     install_requires=[
         # after installation run `pip list`
         # if dm_control==0.4345734 version, then
-        # pip uninstall & re-install dm_control
+        # `pip install --upgrade dm_control`
         "dm-acme[jax]",
         "dm-acme[envs]",
         "scikit-learn",
