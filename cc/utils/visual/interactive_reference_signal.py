@@ -5,11 +5,10 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 
 from cc import load
-from cc.env.make_env import make_env
-from cc.utils.visual.viewer import launch_viewer_controller
-
 from cc.env.collect.source import ObservationReferenceSource
+from cc.env.make_env import make_env
 from cc.env.wrappers import AddRefSignalRewardFnWrapper, TimelimitControltimestepWrapper
+from cc.utils.visual.viewer import launch_viewer_controller
 
 env = make_env("two_segments_v2", random=1, time_limit=10.0)  # <- CHANGE THIS LINE
 controller = load("ctrb_v2.pkl")  # <- CHANGE THIS LINE
