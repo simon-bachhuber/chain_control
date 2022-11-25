@@ -29,6 +29,11 @@ def l2_norm(vector):
     return jnp.sqrt(jnp.sum(vector**2))
 
 
+def l1_norm(vector):
+    assert vector.ndim == 1
+    return jnp.sum(jnp.abs(vector))
+
+
 def mae(y, yhat):
     y, yhat = batch_concat(y, 0), batch_concat(yhat, 0)
     return jnp.mean(jnp.abs(y - yhat))
@@ -41,3 +46,17 @@ def mse(y, yhat):
 
 def rmse(y, yhat):
     return jnp.sqrt(mse(y, yhat))
+
+
+def primes(n: int) -> list[int]:
+    """Find factorization of integer. Slow implementation."""
+    primfac = []
+    d = 2
+    while d*d <= n:
+        while (n % d) == 0:
+            primfac.append(d)  # supposing you want multiple factors repeated
+            n //= d
+        d += 1
+    if n > 1:
+        primfac.append(n)
+    return primfac
