@@ -35,8 +35,13 @@ def tree_concat(
 ):
     if backend == "jax":
         concat = jnp.concatenate
+        atleast_1d = jnp.atleast_1d
     else:
         concat = np.concatenate
+        atleast_1d = np.atleast_1d
+
+    # otherwise scalar-arrays will lead to indexing error
+    trees = jax.tree_map(lambda arr: atleast_1d(arr), trees)
 
     if len(trees) == 0:
         return trees
@@ -53,9 +58,6 @@ def tree_concat(
             None,
             slice(None),
         )
-
-    # otherwise scalar-arrays will lead to indexing error
-    trees = jax.tree_map(lambda arr: jnp.atleast_1d(arr), trees)
 
     initial = jax.tree_map(
         lambda a1, a2: concat((a1[sl], a2[sl]), axis=0), trees[0], trees[1]
