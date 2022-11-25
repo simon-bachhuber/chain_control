@@ -14,7 +14,7 @@ def dummy_env():
 
 def test_controllers():
     env = dummy_env()
-    source, _ = sample_feedforward_collect_and_make_source(env, seeds=[0])
+    source, _, _ = sample_feedforward_collect_and_make_source(env, seeds=[0])
     env_w_source = AddRefSignalRewardFnWrapper(env, source)
 
     controllers = [
