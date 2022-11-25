@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Callable
+from typing import Callable, Tuple
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -11,6 +11,9 @@ from .types import BatchedTimeSeriesOfRef, PyTree, TimeSeriesOfRef
 
 
 class AbstractObservationReferenceSource(ABC):
+    def __init__(self) -> None:
+        self._ts = None
+
     @abstractmethod
     def get_reference_actor(self) -> TimeSeriesOfRef:
         pass
