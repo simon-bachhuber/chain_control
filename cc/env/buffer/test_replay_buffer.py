@@ -3,9 +3,9 @@ import pytest
 import ray
 from acme import EnvironmentLoop
 
-from ..collect.actor import RandomActor
 from ...env import make_env
 from ...utils import tree_equal, tree_slice
+from ..collect.actor import RandomActor
 from .adder import Adder
 from .make_buffer_adder_iterator import make_episodic_buffer_adder_iterator
 from .replay_buffer import RayReplayBuffer, buffer_to_iterator

@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 
 from ...config import use_tqdm
 from ...core import AbstractController
-from ...core.types import TimeSeriesOfAct
+from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
 from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
 from ...utils import to_jax, to_numpy, tree_concat, tree_shape
@@ -124,4 +124,5 @@ def collect_random_step_source(env: dm_env.Environment, seeds: list[int]):
 
     _yss = OrderedDict()
     _yss["xpos_of_segment_end"] = yss
+    _yss = BatchedTimeSeriesOfRef(_yss)
     return ObservationReferenceSource(_yss, ts=ts)

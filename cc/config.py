@@ -29,5 +29,6 @@ def print_compile_warn():
 
 def force_cpu_backend():
     from jax import config
+
     config.update("jax_platform_name", "cpu")
     config.update("jax_platforms", "cpu")

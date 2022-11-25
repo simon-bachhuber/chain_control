@@ -5,10 +5,9 @@ import equinox as eqx
 import jax.random as jrand
 from acme import core
 
-from ...utils import sample_action_from_action_spec
-from ...core.types import Action, Observation, PRNGKey
-from ...utils import to_jax, to_numpy
 from ...core import AbstractController
+from ...core.types import Action, Observation, PRNGKey
+from ...utils import sample_action_from_action_spec, to_jax, to_numpy
 from ..buffer import AbstractAdder
 
 
@@ -22,7 +21,7 @@ class ModuleActor(core.Actor):
         ),
         adder: Optional[AbstractAdder] = None,
         reset_key=False,
-        jit=True
+        jit=True,
     ):
 
         self.action_spec = action_spec

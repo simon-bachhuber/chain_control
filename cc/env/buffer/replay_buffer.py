@@ -5,8 +5,8 @@ from typing import Iterator, Optional, Union
 
 import ray
 
-from .ray_utils import if_ray_actor
 from .rate_limiting import AbstractRateLimiter, NoRateLimitingLimiter
+from .ray_utils import if_ray_actor
 from .replay_element_sample import ReplayElement
 from .ring_array import RingArray
 from .sampler import ReplaySample, Sampler
