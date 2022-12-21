@@ -10,7 +10,7 @@ from ..core import PRNGKey, PyTree
 from ..utils import to_jax, tree_indices, tree_shape
 
 
-@ft.partial(jax.jit, static_argnums=(1, 2))
+@ft.partial(jax.jit, static_argnums=(1, 2, 3))
 def gen_minibatch_indices(
     key, batch_size: int, n_minibatches: int, minibatch_size: int
 ) -> jnp.ndarray:
@@ -31,10 +31,12 @@ def gen_minibatch_indices(
     return jax.lax.scan(scan_fn, 0, length=n_minibatches, xs=None)[1]
 
 
-@ft.partial(jax.jit, static_argnums=(1, 2))
-def gen_minibatch_masks(key, batch_size: int, minibatch_size: int) -> jnp.ndarray:
+@ft.partial(jax.jit, static_argnums=(1, 2, 3))
+def gen_minibatch_masks(
+    key, batch_size: int, n_minibatches: int, minibatch_size: int
+) -> jnp.ndarray:
 
-    idxss = gen_minibatch_indices(key, batch_size, minibatch_size)
+    idxss = gen_minibatch_indices(key, batch_size, n_minibatches, minibatch_size)
 
     # generate masks from idxs
     def to_mask(idxs):
@@ -125,8 +127,6 @@ def make_dataloader(
         inner_key, consume = jrand.split(key)
 
         return MiniBatchState(
-            # The batchsize that enters `gen_minibatch_indices` then might
-            # be already bootstrapped
             gen_minibatch_indices(consume, bs, n_minibatches, minibatch_size),
             0,
             bs,
@@ -148,7 +148,9 @@ def make_dataloader(
             # iteration over one epoch is done
             if reshuffle:
                 key, consume = jrand.split(key)
-                indices = gen_minibatch_indices(consume, state.bs, state.minibatch_size)
+                indices = gen_minibatch_indices(
+                    consume, state.bs, state.n_minibatches, state.minibatch_size
+                )
 
         # reset counter if required
         i = state.i % state.n_minibatches
