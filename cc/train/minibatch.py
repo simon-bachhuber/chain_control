@@ -11,8 +11,13 @@ from ..utils import to_jax, tree_indices, tree_shape
 
 
 @ft.partial(jax.jit, static_argnums=(1, 2))
-def gen_minibatch_indices(key, batch_size: int, minibatch_size: int) -> jnp.ndarray:
-    permutation = jax.random.permutation(key, jnp.arange(batch_size))
+def gen_minibatch_indices(
+    key, batch_size: int, n_minibatches: int, minibatch_size: int
+) -> jnp.ndarray:
+    consume1, consume2 = jrand.split(key)
+    permutation = jax.random.permutation(consume1, jnp.arange(batch_size))
+    permutation_bootstrap = jax.random.permutation(consume2, jnp.arange(batch_size))
+    permutation = jnp.hstack((permutation, permutation_bootstrap))
 
     def scan_fn(carry, _):
         start_idx = carry
@@ -23,7 +28,7 @@ def gen_minibatch_indices(key, batch_size: int, minibatch_size: int) -> jnp.ndar
         carry = start_idx + minibatch_size
         return carry, y
 
-    return jax.lax.scan(scan_fn, 0, length=batch_size // minibatch_size, xs=None)[1]
+    return jax.lax.scan(scan_fn, 0, length=n_minibatches, xs=None)[1]
 
 
 @ft.partial(jax.jit, static_argnums=(1, 2))
@@ -74,6 +79,20 @@ class Dataloader(NamedTuple):
     update_fn: MiniBatchUpdateFn
 
 
+def bootstrap_minibatch_size(
+    n_minibatches: int, batchsize: int, do_bootstrapping: bool
+) -> int:
+    if not do_bootstrapping:
+        assert batchsize % n_minibatches == 0
+    else:
+        for i in range(1000):  # TODO
+            batchsize += i
+            if batchsize % n_minibatches == 0:
+                break
+
+    return batchsize // n_minibatches
+
+
 def make_dataloader(
     dataset: Dataset,
     key: PRNGKey,
@@ -81,6 +100,7 @@ def make_dataloader(
     axis: int = 0,
     reshuffle: bool = True,
     tree_transform: Optional[Callable] = None,
+    do_bootstrapping: bool = False,
 ) -> Dataloader:
 
     if not isinstance(
@@ -101,12 +121,13 @@ def make_dataloader(
     dataset = to_jax(dataset)
 
     def init_minibatch_state():
-        assert bs % n_minibatches == 0
-        minibatch_size = bs // n_minibatches
+        minibatch_size = bootstrap_minibatch_size(n_minibatches, bs, do_bootstrapping)
         inner_key, consume = jrand.split(key)
 
         return MiniBatchState(
-            gen_minibatch_indices(consume, bs, minibatch_size),
+            # The batchsize that enters `gen_minibatch_indices` then might
+            # be already bootstrapped
+            gen_minibatch_indices(consume, bs, n_minibatches, minibatch_size),
             0,
             bs,
             n_minibatches,
