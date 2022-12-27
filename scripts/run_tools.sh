@@ -1,8 +1,14 @@
+#!/bin/bash
+
 black cc
 isort cc 
 flake8
 pytype --config pytype.cfg 
-pytest
+# runs `pytest`, then generates a `.coverage`
+# in depth details using `coverage report -m`
+coverage run -m pytest 
+rm icons/coverage.svg
+coverage-badge -o icons/coverage.svg
 
 nbtb run --inplace docs/1_defining_an_environment.ipynb 
 nbtb run --inplace docs/2_collecting_data_from_an_environment.ipynb 
