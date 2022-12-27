@@ -115,6 +115,33 @@ def test_trainer():
         fitted_model,
         controller,
         controller_train_options=controller_train_options,
-        trackers=[Tracker("train_mse")],
+        trackers=[Tracker("model0", "train_mse")],
+    )
+    controller_trainer.run(1)
+
+    model2 = make_neural_ode_model(
+        env.action_spec(),
+        env.observation_spec(),
+        env.control_timestep,
+        state_dim=2,
+        f_depth=0,
+        u_transform=jnp.arctan,
+    )
+
+    # test that multiple models can be used
+    controller_trainer = ModelControllerTrainer(
+        dict(m1=fitted_model, m2=model2),
+        controller,
+        controller_train_options=controller_train_options,
+        trackers=[Tracker("m2", "train_mse")],
+    )
+    controller_trainer.run(1)
+
+    # test that multiple models can be used
+    controller_trainer = ModelControllerTrainer(
+        dict(m1=fitted_model, m2=model2),
+        controller,
+        controller_train_options=controller_train_options,
+        trackers=[Tracker("loss_without_regu")],
     )
     controller_trainer.run(1)

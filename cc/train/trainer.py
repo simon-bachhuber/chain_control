@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Optional
+from typing import Optional, Union
 
 import equinox as eqx
 import numpy as np
@@ -18,16 +18,19 @@ from .step_fn import (
 
 class Tracker:
     def __init__(
-        self, tracking_metric: str, moving_average_samples: int = 1, mode="min"
+        self, *tracking_metric: str, moving_average_samples: int = 1, mode="min"
     ):
         self.metric = deque(maxlen=moving_average_samples)
-        self.metric_key = tracking_metric
+        self.metric_key = tracking_metric[0]
+        for s in tracking_metric[1:]:
+            self.metric_key += "_" + s
+
         self._best_model = None
         self._associated_metric = None
         assert mode == "min"
 
-    def report(self, model, metrics):
-        metric = metrics[self.metric_key]
+    def report(self, model, logs):
+        metric = logs[self.metric_key]
 
         self.metric.append(metric)
 
@@ -80,7 +83,7 @@ class ModelControllerTrainer:
 
     def __init__(
         self,
-        model: Optional[AbstractModel] = None,
+        model: Union[AbstractModel, dict[str, AbstractModel]],
         controller: Optional[AbstractController] = None,
         model_train_options: Optional[TrainingOptionsModel] = None,
         controller_train_options: Optional[TrainingOptionsController] = None,
@@ -94,17 +97,27 @@ class ModelControllerTrainer:
         ), """Specify only `TrainingOptionsModel` or `TrainingOptionsController`
         depending on what you want to optimise for.."""
 
-        assert model is not None, "Model is missing."
-
         self._model = self._controller = None
 
         if model_train_options is not None:
+            assert not isinstance(
+                model, dict
+            ), "Multiple models are only suppored for controller training."
             self._model = model
             self._step_fn, self._opt_state, self._minibatch_state = make_step_fn_model(
                 model, model_train_options
             )
         elif controller_train_options is not None:
             assert controller is not None, "Controller is missing."
+
+            if not isinstance(model, dict):
+                model = dict(model0=model)
+                print(
+                    """This model has been registered with model name `model0`.
+                    When using multiple models individual model names have to
+                    be provided by passing a dictionary in the `model` argument"""
+                )
+
             self._controller = controller
             (
                 self._step_fn,
