@@ -48,5 +48,6 @@ setuptools.setup(
         "equinox",
         "tqdm",
         "ipykernel",
+        "git+https://github.com/SimiPixel/tree_utils.git",
     ],
 )
