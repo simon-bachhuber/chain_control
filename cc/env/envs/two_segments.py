@@ -9,11 +9,13 @@ from dm_control.rl import control
 from ...utils.sample_from_spec import _spec_from_observation
 from .common import ASSETS, read_model
 
+
 @dataclass
 class JointParams:
     damping: float = 0
     springref: float = 0
     stiffness: float = 0
+
 
 @dataclass
 class CartParams:
@@ -22,8 +24,10 @@ class CartParams:
     hinge_joint_params: JointParams
 
 
-def generate_body(name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams) -> str:
-    return fr"""
+def generate_body(
+    name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams
+) -> str:
+    return rf"""
     <body name="{name}_cart" pos="0 0 2">
       <joint name="{name}_slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="{slider_joint_params.damping}" springref="{slider_joint_params.springref}" stiffness="{slider_joint_params.stiffness}"/>
       <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="self"  mass="1"/>
@@ -39,15 +43,18 @@ def generate_body(name: str, slider_joint_params: JointParams, hinge_joint_param
     </body>
     """.encode()
 
+
 def generate_motor(name: str) -> bytes:
-    return fr"""
+    return rf"""
         <motor name="{name}_slide" joint="{name}_slider" gear="5" ctrllimited="false"/>
     """.encode()
 
+
 def generate_camera(name: str) -> bytes:
-    return fr""""
+    return rf"""
         <camera name="{name}_lookatchain" mode="targetbody" target="{name}_cart" pos="0 -6 1"/>
     """.encode()
+
 
 class SegmentPhysics(mujoco.Physics):
     obs_cart_name: str
@@ -71,12 +78,22 @@ def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
 
     for cart_param in cart_params:
         # Insert bodies into template
-        xml_content = xml_content.replace(b"<!-- Bodies -->", generate_body(cart_param.name, cart_param.slider_joint_params, cart_param.hinge_joint_params))
+        xml_content = xml_content.replace(
+            b"<!-- Bodies -->",
+            generate_body(
+                cart_param.name,
+                cart_param.slider_joint_params,
+                cart_param.hinge_joint_params,
+            ),
+        )
         # Insert motors into template
-        xml_content = xml_content.replace(b"<!-- Motors -->", generate_motor(cart_param.name))
+        xml_content = xml_content.replace(
+            b"<!-- Motors -->", generate_motor(cart_param.name)
+        )
         # Insert cameras into template
-        xml_content = xml_content.replace(b"<!-- Cameras -->", generate_camera(cart_param.name))        
-
+        xml_content = xml_content.replace(
+            b"<!-- Cameras -->", generate_camera(cart_param.name)
+        )
 
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
     seg_phy.set_obs_cart_name(cart_params[0].name)
