@@ -27,6 +27,10 @@ class CartParams:
 def generate_body(
     name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams
 ) -> str:
+    """
+    Generates a single movable body object, consisting of two poles connected by hinges.
+    Joints of both the slider and the hinges can be parameterized.
+    """
     return rf"""
     <body name="{name}_cart" pos="0 0 2">
       <joint name="{name}_slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="{slider_joint_params.damping}" springref="{slider_joint_params.springref}" stiffness="{slider_joint_params.stiffness}"/>
@@ -45,12 +49,18 @@ def generate_body(
 
 
 def generate_motor(name: str) -> bytes:
+    """
+    Generates a single actuator used for sending inputs to a previously created body.
+    """
     return rf"""
         <motor name="{name}_slide" joint="{name}_slider" gear="5" ctrllimited="false"/>
     """.encode()
 
 
 def generate_camera(name: str) -> bytes:
+    """
+    Generates a camera which is fixed on the passed object (typically a cart).
+    """
     return rf"""
         <camera name="{name}_lookatchain" mode="targetbody" target="{name}_cart" pos="0 -6 1"/>
     """.encode()
@@ -60,9 +70,16 @@ class SegmentPhysics(mujoco.Physics):
     obs_cart_name: str
 
     def set_obs_cart_name(self, cart_name: str):
+        """
+        Sets the cart which should be observed (used for training).
+        """
         self.obs_cart_name = cart_name
 
     def xpos_of_segment_end(self):
+        """
+        Returns the x-position of the first registered cart's segment end.
+        Note: Training multiple controllers is not possible because of this.
+        """
         return self.named.data.xpos[f"{self.obs_cart_name}_segment_end", "x"]
 
     def set_torque_of_cart(self, u):
@@ -71,6 +88,9 @@ class SegmentPhysics(mujoco.Physics):
 
 
 def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
+    """
+    Creates a mujoco physics object using the provided cart parameters.
+    """
     xml_path = "two_segments.xml"
     xml_content = read_model(xml_path)
 
