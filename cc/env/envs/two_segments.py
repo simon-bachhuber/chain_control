@@ -32,10 +32,10 @@ def generate_body(
       <joint name="{name}_slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="{slider_joint_params.damping}" springref="{slider_joint_params.springref}" stiffness="{slider_joint_params.stiffness}"/>
       <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="self"  mass="1"/>
       <body name="{name}_pole_1" childclass="pole" euler="0 180 0" pos="0 0 -0.1">
-        <joint name="{name}_hinge_1" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
+        <joint name="{name}_hinge_1" axis="0 1 0" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
         <geom name="{name}_pole_1"/>
         <body name="{name}_pole_2" childclass="pole" pos="0 0 1.1">
-          <joint name="{name}_hinge_2" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
+          <joint name="{name}_hinge_2" axis="0 1 0" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
           <geom name="{name}_pole_2"/>
           <body name="{name}_segment_end" pos="0 0 1.0"/>
         </body>
