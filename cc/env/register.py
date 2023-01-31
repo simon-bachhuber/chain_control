@@ -6,6 +6,7 @@ from dm_control.rl import control
 
 from .envs import two_segments
 from .envs.two_segments import CartParams, JointParams, SegmentTask
+from .envs import two_segments_v2
 
 
 def load_physics_wrapper(cart_params: List[CartParams]):
@@ -69,6 +70,7 @@ _register = {
         SegmentTask,
         10.0,
     ),
+
 }
 
 
