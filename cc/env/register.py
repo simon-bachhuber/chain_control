@@ -6,10 +6,9 @@ from dm_control.rl import control
 
 from .envs import two_segments
 from .envs.two_segments import CartParams, JointParams, SegmentTask
-from .envs import two_segments_v2
 
 
-def load_physics_wrapper(cart_params: List[CartParams]):
+def _load_physics_wrapper(cart_params: List[CartParams]) -> Callable[[], mujoco.Physics]:
     def load_physics():
         return two_segments.load_physics(cart_params)
 
@@ -26,7 +25,7 @@ class EnvRegisterValue:
 
 _register = {
     "two_segments_v1": EnvRegisterValue(
-        load_physics_wrapper(
+        _load_physics_wrapper(
             [
                 CartParams(
                     name="cart",
@@ -41,7 +40,7 @@ _register = {
         10.0,
     ),
     "two_segments_v2": EnvRegisterValue(
-        load_physics_wrapper(
+        _load_physics_wrapper(
             [
                 CartParams(
                     name="cart",
@@ -56,7 +55,7 @@ _register = {
         10.0,
     ),
     "two_segments_v3": EnvRegisterValue(
-        load_physics_wrapper(
+        _load_physics_wrapper(
             [
                 CartParams(
                     name="cart",
@@ -70,7 +69,6 @@ _register = {
         SegmentTask,
         10.0,
     ),
-
 }
 
 
@@ -82,5 +80,5 @@ def register_new_two_segment_env(
     id: str, cart_params: CartParams, time_limit: float = 10.0
 ):
     _register[id] = EnvRegisterValue(
-        id, load_physics_wrapper(cart_params), SegmentTask, time_limit
+        id, _load_physics_wrapper(cart_params), SegmentTask, time_limit
     )

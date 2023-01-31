@@ -26,7 +26,7 @@ class CartParams:
 
 def generate_body(
     name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams
-) -> str:
+) -> bytes:
     """
     Generates a single movable body object, consisting of two poles connected by hinges.
     Joints of both the slider and the hinges can be parameterized.
