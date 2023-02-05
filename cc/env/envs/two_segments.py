@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from typing import List
 
 import numpy as np
@@ -8,6 +9,25 @@ from dm_control.rl import control
 
 from ...utils.sample_from_spec import _spec_from_observation
 from .common import ASSETS, read_model
+
+
+class Color(Enum):
+    SELF = "self" # 0.7, 0.5, 0.3, 1
+    RED = "red" # 1, 0, 0, 1
+    GREEN = "green" # 0, 1, 0, 1
+    BLUE = "blue" # 0, 0, 1, 1
+    YELLOW = "yellow" # 1, 1, 0, 1
+    CYAN = "cyan" # 0, 1, 1, 1
+    MAGENTA = "magenta" # 1, 0, 1, 1
+    WHITE = "white" # 1, 1, 1, 1
+    GRAY = "gray" # 0.5, 0.5, 0.5, 1
+    BROWN = "brown" # 0.6, 0.3, 0.1, 1
+    ORANGE = "orange" # 1, 0.5, 0, 1
+    PINK = "pink" # 1, 0.75, 0.8, 1
+    PURPLE = "purple" # 0.5, 0, 0.5, 1
+    LIME = "lime" # 0.5, 1, 0, 1
+    TURQUOISE = "turquoise" # 0.25, 0.88, 0.82, 1
+    GOLD = "gold" # 1, 0.84, 0, 1
 
 
 @dataclass
@@ -22,10 +42,11 @@ class CartParams:
     name: str
     slider_joint_params: JointParams
     hinge_joint_params: JointParams
+    material: Color = Color.SELF
 
 
 def generate_body(
-    name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams
+    name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams, material: Color
 ) -> bytes:
     """
     Generates a single movable body object, consisting of two poles connected by hinges.
@@ -34,7 +55,7 @@ def generate_body(
     return rf"""
     <body name="{name}_cart" pos="0 0 2">
       <joint name="{name}_slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="{slider_joint_params.damping}" springref="{slider_joint_params.springref}" stiffness="{slider_joint_params.stiffness}"/>
-      <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="self"  mass="1"/>
+      <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="{material}"  mass="1"/>
       <body name="{name}_pole_1" childclass="pole" euler="0 180 0" pos="0 0 -0.1">
         <joint name="{name}_hinge_1" axis="0 1 0" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
         <geom name="{name}_pole_1"/>
@@ -96,24 +117,32 @@ def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
 
     assert len(cart_params) >= 1, "At least one cart is required"
 
+    bodies = b""
+    motors = b""
+    cameras = b""
+
     for cart_param in cart_params:
-        # Insert bodies into template
-        xml_content = xml_content.replace(
-            b"<!-- Bodies -->",
-            generate_body(
-                cart_param.name,
-                cart_param.slider_joint_params,
-                cart_param.hinge_joint_params,
-            ),
+        bodies += generate_body(
+            cart_param.name,
+            cart_param.slider_joint_params,
+            cart_param.hinge_joint_params,
+            cart_param.material,
         )
-        # Insert motors into template
-        xml_content = xml_content.replace(
-            b"<!-- Motors -->", generate_motor(cart_param.name)
-        )
-        # Insert cameras into template
-        xml_content = xml_content.replace(
-            b"<!-- Cameras -->", generate_camera(cart_param.name)
-        )
+        motors += generate_motor(cart_param.name)
+        cameras += generate_camera(cart_param.name)
+
+    # Insert bodies into template
+    xml_content = xml_content.replace(
+        b"<!-- Bodies -->", bodies
+    )
+    # Insert motors into template
+    xml_content = xml_content.replace(
+        b"<!-- Motors -->", motors
+    )
+    # Insert cameras into template
+    xml_content = xml_content.replace(
+        b"<!-- Cameras -->", cameras
+    )
 
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
     seg_phy.set_obs_cart_name(cart_params[0].name)
