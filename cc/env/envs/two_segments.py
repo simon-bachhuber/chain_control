@@ -12,22 +12,22 @@ from .common import ASSETS, read_model
 
 
 class Color(Enum):
-    SELF = "self" # 0.7, 0.5, 0.3, 1
-    RED = "red" # 1, 0, 0, 1
-    GREEN = "green" # 0, 1, 0, 1
-    BLUE = "blue" # 0, 0, 1, 1
-    YELLOW = "yellow" # 1, 1, 0, 1
-    CYAN = "cyan" # 0, 1, 1, 1
-    MAGENTA = "magenta" # 1, 0, 1, 1
-    WHITE = "white" # 1, 1, 1, 1
-    GRAY = "gray" # 0.5, 0.5, 0.5, 1
-    BROWN = "brown" # 0.6, 0.3, 0.1, 1
-    ORANGE = "orange" # 1, 0.5, 0, 1
-    PINK = "pink" # 1, 0.75, 0.8, 1
-    PURPLE = "purple" # 0.5, 0, 0.5, 1
-    LIME = "lime" # 0.5, 1, 0, 1
-    TURQUOISE = "turquoise" # 0.25, 0.88, 0.82, 1
-    GOLD = "gold" # 1, 0.84, 0, 1
+    SELF = "self"
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    YELLOW = "yellow"
+    CYAN = "cyan"
+    MAGENTA = "magenta"
+    WHITE = "white"
+    GRAY = "gray"
+    BROWN = "brown"
+    ORANGE = "orange"
+    PINK = "pink"
+    PURPLE = "purple"
+    LIME = "lime"
+    TURQUOISE = "turquoise"
+    GOLD = "gold"
 
 
 @dataclass
@@ -55,13 +55,13 @@ def generate_body(
     return rf"""
     <body name="{name}_cart" pos="0 0 2">
       <joint name="{name}_slider" type="slide" limited="true" axis="1 0 0" range="-999.8 999.8" damping="{slider_joint_params.damping}" springref="{slider_joint_params.springref}" stiffness="{slider_joint_params.stiffness}"/>
-      <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="{material}"  mass="1"/>
+      <geom name="{name}_cart" type="box" size="0.1 0.15 0.05" material="{material.value}"  mass="1"/>
       <body name="{name}_pole_1" childclass="pole" euler="0 180 0" pos="0 0 -0.1">
         <joint name="{name}_hinge_1" axis="0 1 0" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
-        <geom name="{name}_pole_1"/>
+        <geom name="{name}_pole_1" material="{material.value}"/>
         <body name="{name}_pole_2" childclass="pole" pos="0 0 1.1">
           <joint name="{name}_hinge_2" axis="0 1 0" damping="{hinge_joint_params.damping}" springref="{hinge_joint_params.springref}" stiffness="{hinge_joint_params.stiffness}"/>
-          <geom name="{name}_pole_2"/>
+          <geom name="{name}_pole_2" material="{material.value}"/>
           <body name="{name}_segment_end" pos="0 0 1.0"/>
         </body>
       </body>
@@ -88,20 +88,13 @@ def generate_camera(name: str) -> bytes:
 
 
 class SegmentPhysics(mujoco.Physics):
-    obs_cart_name: str
+    obs_cart_names: list[str]
 
-    def set_obs_cart_name(self, cart_name: str):
-        """
-        Sets the cart which should be observed (used for training).
-        """
-        self.obs_cart_name = cart_name
+    def set_obs_cart_names(self, cart_names: list[str]):
+        self.obs_cart_names = cart_names
 
     def xpos_of_segment_end(self):
-        """
-        Returns the x-position of the first registered cart's segment end.
-        Note: Training multiple controllers is not possible because of this.
-        """
-        return self.named.data.xpos[f"{self.obs_cart_name}_segment_end", "x"]
+        return np.asarray([self.named.data.xpos[f"{cart_name}_segment_end", "x"] for cart_name in self.obs_cart_names])
 
     def set_torque_of_cart(self, u):
         u = np.arctan(u)
@@ -145,7 +138,7 @@ def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
     )
 
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
-    seg_phy.set_obs_cart_name(cart_params[0].name)
+    seg_phy.set_obs_cart_names([cart_param.name for cart_param in cart_params])
     return seg_phy
 
 
