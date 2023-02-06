@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Final, Optional, Type
 from dataclasses import dataclass
 from typing import Callable, List
 from dm_control import mujoco
@@ -7,7 +7,6 @@ import dm_env
 from acme.wrappers import SinglePrecisionWrapper
 from dm_control.rl import control
 
-from .register import _register
 from .wrappers import (
     DelayActionWrapper,
     TimelimitControltimestepWrapper,
@@ -114,3 +113,39 @@ def make_env_from_config(
     env = TrackTimeWrapper(env)
 
     return env
+
+
+def make_env(
+    id: str,
+    time_limit: float = 10.0,
+    control_timestep: float = 0.01,
+    single_precision: Optional[bool] = True,
+    delay: int = 0,
+    **task_kwargs
+) -> TimelimitControltimestepWrapper:
+
+    # prevent circular import
+    from cc.env.sample_envs import TWO_SEGMENT_V1, TWO_SEGMENT_V2, TWO_SEGMENT_V3
+
+    _id_accessible_envs: Final = {
+        "two_segments_v1": TWO_SEGMENT_V1,
+        "two_segments_v2": TWO_SEGMENT_V2,
+        "two_segments_v3": TWO_SEGMENT_V3,
+    }
+
+
+    if id not in _id_accessible_envs:
+        raise Exception(
+            f"Unknown environment id {id}, available ids are: {_id_accessible_envs.keys()}"
+        )
+
+    env_config = _id_accessible_envs[id]
+
+    return make_env_from_config(
+        env_config,
+        time_limit,
+        control_timestep,
+        single_precision,
+        delay,
+        **task_kwargs
+    )
