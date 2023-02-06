@@ -16,6 +16,7 @@ from ...utils import to_jax, to_numpy, tree_concat, tree_shape
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor
+from cc.env.wrappers import RecordVideoWrapper
 from .source import (
     ObservationReferenceSource,
     draw_u_from_cosines,
@@ -45,7 +46,7 @@ def collect_exhaust_source(
     observers: Sequence[EnvLoopObserver] = (),
 ) -> Tuple[ReplaySample, dict]:
 
-    assert isinstance(env, AddRefSignalRewardFnWrapper)
+    assert isinstance(env, AddRefSignalRewardFnWrapper) or isinstance(env, RecordVideoWrapper)
     source = env._source
 
     N = tree_shape(source._yss)
