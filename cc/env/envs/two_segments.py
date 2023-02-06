@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Callable, List
 
 import numpy as np
 from dm_control import mujoco
@@ -101,10 +101,15 @@ class SegmentPhysics(mujoco.Physics):
         self.set_control(u)
 
 
-def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
+def _load_physics(cart_params: List[CartParams] | CartParams) -> SegmentPhysics:
     """
     Creates a mujoco physics object using the provided cart parameters.
     """
+
+    # if cart_params not list make it list
+    if not isinstance(cart_params, list):
+        cart_params = [cart_params]
+
     xml_path = "two_segments.xml"
     xml_content = read_model(xml_path)
 
@@ -140,6 +145,12 @@ def load_physics(cart_params: List[CartParams]) -> SegmentPhysics:
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
     seg_phy.set_obs_cart_names([cart_param.name for cart_param in cart_params])
     return seg_phy
+
+def load_physics(cart_params: List[CartParams] | CartParams) -> Callable[[], mujoco.Physics]:
+    def load_physics_helper():
+        return _load_physics(cart_params)
+
+    return load_physics_helper
 
 
 class SegmentTask(control.Task):
