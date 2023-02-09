@@ -7,6 +7,8 @@ import numpy as np
 from dm_control import mujoco
 from dm_control.rl import control
 
+from cc.env.make_env import EnvConfig
+
 from ...utils.sample_from_spec import _spec_from_observation
 from .common import ASSETS, read_model
 
@@ -151,6 +153,13 @@ def load_physics(cart_params: List[CartParams] | CartParams) -> Callable[[], muj
         return _load_physics(cart_params)
 
     return load_physics_helper
+
+
+def generate_env_config(cart_params: List[CartParams] | CartParams):
+    return EnvConfig(
+        load_physics=load_physics(cart_params),
+        task=SegmentTask,
+    )
 
 
 class SegmentTask(control.Task):

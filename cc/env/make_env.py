@@ -17,7 +17,7 @@ from .wrappers import (
 @dataclass
 class EnvConfig:
     load_physics: Callable[[], mujoco.Physics]
-    Task: Type[control.Task]
+    task: Type[control.Task]
 
 
 def _make_unwrapped_env(
@@ -33,7 +33,7 @@ def _make_unwrapped_env(
         )
 
     physics = env_config.load_physics()
-    task = env_config.Task(**task_kwargs)
+    task = env_config.task(**task_kwargs)
 
     env = control.Environment(
         physics, task, time_limit, control_timestep
