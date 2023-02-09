@@ -127,3 +127,11 @@ def collect_random_step_source(env: dm_env.Environment, seeds: list[int]):
     _yss["xpos_of_segment_end"] = yss
     _yss = BatchedTimeSeriesOfRef(_yss)
     return ObservationReferenceSource(_yss, ts=ts)
+
+
+def append_source(first: ObservationReferenceSource, second: ObservationReferenceSource):
+    yss = OrderedDict()
+    for key in first._yss.keys():
+        yss[key] = np.concatenate([first._yss[key], second._yss[key]], axis=0)
+    
+    return ObservationReferenceSource(yss, ts=first._ts)
