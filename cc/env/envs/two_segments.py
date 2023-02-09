@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, List
+from typing import Callable, List, Optional,  Union
 
 import numpy as np
 from dm_control import mujoco
@@ -90,9 +90,9 @@ def generate_camera(name: str) -> bytes:
 
 
 class SegmentPhysics(mujoco.Physics):
-    obs_cart_names: list[str]
+    obs_cart_names: List[str]
 
-    def set_obs_cart_names(self, cart_names: list[str]):
+    def set_obs_cart_names(self, cart_names: List[str]):
         self.obs_cart_names = cart_names
 
     def xpos_of_segment_end(self):
@@ -103,7 +103,7 @@ class SegmentPhysics(mujoco.Physics):
         self.set_control(u)
 
 
-def _load_physics(cart_params: List[CartParams] | CartParams) -> SegmentPhysics:
+def _load_physics(cart_params: Union[List[CartParams], CartParams]) -> SegmentPhysics:
     """
     Creates a mujoco physics object using the provided cart parameters.
     """
@@ -148,16 +148,33 @@ def _load_physics(cart_params: List[CartParams] | CartParams) -> SegmentPhysics:
     seg_phy.set_obs_cart_names([cart_param.name for cart_param in cart_params])
     return seg_phy
 
-def load_physics(cart_params: List[CartParams] | CartParams) -> Callable[[], mujoco.Physics]:
+
+def load_physics(cart_params: Union[List[CartParams], CartParams]) -> Callable[[], mujoco.Physics]:
     def load_physics_helper():
         return _load_physics(cart_params)
 
     return load_physics_helper
 
 
-def generate_env_config(cart_params: List[CartParams] | CartParams):
+def generate_env_config(cart_params: Union[List[CartParams], CartParams]):
     return EnvConfig(
         load_physics=load_physics(cart_params),
+        task=SegmentTask,
+    )
+
+
+def generate_duplicate_env_config(cart_params: CartParams, num: int, materials: Optional[List[Color]] = None):
+    if materials is None:
+        materials = [e for e in Color]
+        materials = [materials[i % len(materials)] for i in range(num)]
+    else:
+        assert len(materials) == num, "Number of materials must match number of carts"
+
+    return EnvConfig(
+        load_physics=load_physics(
+            [CartParams(**{**cart_params.__dict__, "name": cart_params.name + f"_{i}",
+                        "material": material}) for i, material in enumerate(materials)]
+        ),
         task=SegmentTask,
     )
 
