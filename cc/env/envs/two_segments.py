@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, List, Optional,  Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 from dm_control import mujoco
@@ -48,7 +48,10 @@ class CartParams:
 
 
 def generate_body(
-    name: str, slider_joint_params: JointParams, hinge_joint_params: JointParams, material: Color
+    name: str,
+    slider_joint_params: JointParams,
+    hinge_joint_params: JointParams,
+    material: Color,
 ) -> bytes:
     """
     Generates a single movable body object, consisting of two poles connected by hinges.
@@ -96,7 +99,12 @@ class SegmentPhysics(mujoco.Physics):
         self.obs_cart_names = cart_names
 
     def xpos_of_segment_end(self):
-        return np.asarray([self.named.data.xpos[f"{cart_name}_segment_end", "x"] for cart_name in self.obs_cart_names])
+        return np.asarray(
+            [
+                self.named.data.xpos[f"{cart_name}_segment_end", "x"]
+                for cart_name in self.obs_cart_names
+            ]
+        )
 
     def set_torque_of_cart(self, u):
         u = np.arctan(u)
@@ -132,24 +140,20 @@ def _load_physics(cart_params: Union[List[CartParams], CartParams]) -> SegmentPh
         cameras += generate_camera(cart_param.name)
 
     # Insert bodies into template
-    xml_content = xml_content.replace(
-        b"<!-- Bodies -->", bodies
-    )
+    xml_content = xml_content.replace(b"<!-- Bodies -->", bodies)
     # Insert motors into template
-    xml_content = xml_content.replace(
-        b"<!-- Motors -->", motors
-    )
+    xml_content = xml_content.replace(b"<!-- Motors -->", motors)
     # Insert cameras into template
-    xml_content = xml_content.replace(
-        b"<!-- Cameras -->", cameras
-    )
+    xml_content = xml_content.replace(b"<!-- Cameras -->", cameras)
 
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
     seg_phy.set_obs_cart_names([cart_param.name for cart_param in cart_params])
     return seg_phy
 
 
-def load_physics(cart_params: Union[List[CartParams], CartParams]) -> Callable[[], mujoco.Physics]:
+def load_physics(
+    cart_params: Union[List[CartParams], CartParams]
+) -> Callable[[], mujoco.Physics]:
     def load_physics_helper():
         return _load_physics(cart_params)
 
@@ -163,7 +167,9 @@ def generate_env_config(cart_params: Union[List[CartParams], CartParams]):
     )
 
 
-def generate_duplicate_env_config(cart_params: CartParams, num: int, materials: Optional[List[Color]] = None):
+def generate_duplicate_env_config(
+    cart_params: CartParams, num: int, materials: Optional[List[Color]] = None
+):
     if materials is None:
         materials = [e for e in Color]
         materials = [materials[i % len(materials)] for i in range(num)]
@@ -172,8 +178,16 @@ def generate_duplicate_env_config(cart_params: CartParams, num: int, materials: 
 
     return EnvConfig(
         load_physics=load_physics(
-            [CartParams(**{**cart_params.__dict__, "name": cart_params.name + f"_{i}",
-                        "material": material}) for i, material in enumerate(materials)]
+            [
+                CartParams(
+                    **{
+                        **cart_params.__dict__,
+                        "name": cart_params.name + f"_{i}",
+                        "material": material,
+                    }
+                )
+                for i, material in enumerate(materials)
+            ]
         ),
         task=SegmentTask,
     )

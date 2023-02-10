@@ -1,10 +1,9 @@
-from typing import Final, Optional, Type
 from dataclasses import dataclass
-from typing import Callable, List
-from dm_control import mujoco
+from typing import Callable, Final, Optional, Type
 
 import dm_env
 from acme.wrappers import SinglePrecisionWrapper
+from dm_control import mujoco
 from dm_control.rl import control
 
 from .wrappers import (
@@ -21,12 +20,8 @@ class EnvConfig:
 
 
 def _make_unwrapped_env(
-    env_config: EnvConfig,
-    time_limit: float,
-    control_timestep: float,
-    **task_kwargs
+    env_config: EnvConfig, time_limit: float, control_timestep: float, **task_kwargs
 ):
-
     if "random" not in task_kwargs:
         raise Exception(
             "Please fix the seed to ensure deterministic behaviour, use `random=*int*`"
@@ -35,21 +30,17 @@ def _make_unwrapped_env(
     physics = env_config.load_physics()
     task = env_config.task(**task_kwargs)
 
-    env = control.Environment(
-        physics, task, time_limit, control_timestep
-    )
+    env = control.Environment(physics, task, time_limit, control_timestep)
 
     return env, time_limit, control_timestep
 
 
 def make_unwrapped_env(
-    env_config: EnvConfig,
-    time_limit: float,
-    control_timestep: float,
-    **task_kwargs
+    env_config: EnvConfig, time_limit: float, control_timestep: float, **task_kwargs
 ) -> dm_env.Environment:
-
-    return _make_unwrapped_env(env_config, time_limit, control_timestep, **task_kwargs)[0]
+    return _make_unwrapped_env(env_config, time_limit, control_timestep, **task_kwargs)[
+        0
+    ]
 
 
 def _make_almost_unwrapped_env(
@@ -57,9 +48,8 @@ def _make_almost_unwrapped_env(
     time_limit: float,
     control_timestep: float,
     single_precision: Optional[bool] = True,
-    **task_kwargs
+    **task_kwargs,
 ):
-
     env, time_limit, control_timestep = _make_unwrapped_env(
         env_config, time_limit, control_timestep, **task_kwargs
     )
@@ -75,9 +65,8 @@ def make_almost_unwrapped_env(
     time_limit: float,
     control_timestep: float,
     single_precision: Optional[bool] = True,
-    **task_kwargs
+    **task_kwargs,
 ) -> dm_env.Environment:
-
     env = make_unwrapped_env(env_config, time_limit, control_timestep, **task_kwargs)
 
     if single_precision:
@@ -92,9 +81,8 @@ def make_env_from_config(
     control_timestep: float = 0.01,
     single_precision: Optional[bool] = True,
     delay: int = 0,
-    **task_kwargs
+    **task_kwargs,
 ) -> TimelimitControltimestepWrapper:  # TODO pytype will fight you on this
-
     env, time_limit, control_timestep = _make_almost_unwrapped_env(
         env_config, time_limit, control_timestep, single_precision, **task_kwargs
     )
@@ -121,9 +109,8 @@ def make_env(
     control_timestep: float = 0.01,
     single_precision: Optional[bool] = True,
     delay: int = 0,
-    **task_kwargs
+    **task_kwargs,
 ) -> TimelimitControltimestepWrapper:
-
     # prevent circular import
     from cc.env.sample_envs import TWO_SEGMENT_V1, TWO_SEGMENT_V2, TWO_SEGMENT_V3
 
@@ -133,19 +120,14 @@ def make_env(
         "two_segments_v3": TWO_SEGMENT_V3,
     }
 
-
     if id not in _id_accessible_envs:
         raise Exception(
-            f"Unknown environment id {id}, available ids are: {_id_accessible_envs.keys()}"
+            f"Unknown environment id {id}, available ids are: "
+            f"{_id_accessible_envs.keys()}"
         )
 
     env_config = _id_accessible_envs[id]
 
     return make_env_from_config(
-        env_config,
-        time_limit,
-        control_timestep,
-        single_precision,
-        delay,
-        **task_kwargs
+        env_config, time_limit, control_timestep, single_precision, delay, **task_kwargs
     )
