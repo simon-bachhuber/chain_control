@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# this file should be execute from the root directory of this project
+# using `./scripts/run_tools.sh`
+
 black cc
 isort cc 
 flake8
