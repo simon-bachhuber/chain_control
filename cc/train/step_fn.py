@@ -207,9 +207,9 @@ def make_step_fn_controller(
 
         log_of_loss_values_flat = {}
         for model_name, loss_name_and_value in log_of_loss_values.items():
-            for loss_name, loss_value in loss_name_and_value.items():
+            for loss_name, model_loss_value in loss_name_and_value.items():
                 log_of_loss_values_flat.update(
-                    {model_name + "_" + loss_name: loss_value}
+                    {model_name + "_" + loss_name: model_loss_value}
                 )
         logs.update(log_of_loss_values_flat)
 

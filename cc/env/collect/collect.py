@@ -7,6 +7,8 @@ from acme import EnvironmentLoop
 from acme.utils import loggers
 from tqdm.auto import tqdm
 
+from cc.env.wrappers import RecordVideoWrapper
+
 from ...config import use_tqdm
 from ...core import AbstractController
 from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
@@ -30,7 +32,6 @@ def concat_samples(*samples) -> ReplaySample:
 def sample_feedforward_and_collect(
     env: dm_env.Environment, seeds_gp: list[int], seeds_cos: list[Union[int, float]]
 ) -> ReplaySample:
-
     _, sample_gp, _ = sample_feedforward_collect_and_make_source(env, seeds=seeds_gp)
     _, sample_cos, _ = sample_feedforward_collect_and_make_source(
         env, draw_u_from_cosines, seeds=seeds_cos
@@ -44,8 +45,9 @@ def collect_exhaust_source(
     controller: AbstractController,
     observers: Sequence[EnvLoopObserver] = (),
 ) -> Tuple[ReplaySample, dict]:
-
-    assert isinstance(env, AddRefSignalRewardFnWrapper)
+    assert isinstance(env, AddRefSignalRewardFnWrapper) or isinstance(
+        env, RecordVideoWrapper
+    )
     source = env._source
 
     N = tree_shape(source._yss)
@@ -69,7 +71,6 @@ def collect(
     controller: AbstractController,
     observers: Sequence[EnvLoopObserver] = (),
 ) -> Tuple[ReplaySample, dict]:
-
     env.reset()
 
     buffer, adder, iterator = make_episodic_buffer_adder_iterator(
@@ -96,7 +97,6 @@ def sample_feedforward_collect_and_make_source(
     ],
     observers: Sequence[EnvLoopObserver] = (),
 ) -> Tuple[ObservationReferenceSource, ReplaySample, dict]:
-
     assert len(seeds) > 0
 
     ts = env.ts
@@ -114,15 +114,27 @@ def sample_feedforward_collect_and_make_source(
     return source, sample, tree_concat(loop_results)
 
 
-def collect_random_step_source(env: dm_env.Environment, seeds: list[int]):
+def collect_random_step_source(
+    env: dm_env.Environment, seeds: list[int], amplitude: float = 3.0
+):
     ts = env.ts
     yss = np.zeros((len(seeds), len(ts) + 1, 1))
 
     for i, seed in enumerate(seeds):
         np.random.seed(seed)
-        yss[i] = np.random.uniform(-3.0, 3.0)
+        yss[i] = np.random.uniform(-amplitude, amplitude)
 
     _yss = OrderedDict()
     _yss["xpos_of_segment_end"] = yss
     _yss = BatchedTimeSeriesOfRef(_yss)
     return ObservationReferenceSource(_yss, ts=ts)
+
+
+def append_source(
+    first: ObservationReferenceSource, second: ObservationReferenceSource
+):
+    yss = OrderedDict()
+    for key in first._yss.keys():
+        yss[key] = np.concatenate([first._yss[key], second._yss[key]], axis=0)
+
+    return ObservationReferenceSource(yss, ts=first._ts)
