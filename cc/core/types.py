@@ -2,6 +2,7 @@ from collections import OrderedDict
 from typing import Generic, NewType, TypeVar
 
 import jax.numpy as jnp
+from tree_utils import PyTree
 
 PRNGKey = NewType("PRNGKey", jnp.ndarray)
 
@@ -16,16 +17,3 @@ BatchedTimeSeriesOfRef = NewType("BatchedTimeSeriesOfRef", OrderedDict)
 Action = NewType("Action", jnp.ndarray)
 TimeSeriesOfAct = NewType("TimeSeriesOfAct", jnp.ndarray)
 BatchedTimeSeriesOfAct = NewType("BatchedTimeSeriesOfAct", jnp.ndarray)
-
-
-T = TypeVar("T")
-
-
-class PyTree(Generic[T]):
-    pass
-
-    def __iter__(self):
-        pass
-
-    def __next__(self):
-        pass
