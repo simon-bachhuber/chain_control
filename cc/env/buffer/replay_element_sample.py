@@ -4,8 +4,7 @@ from typing import Union
 import dm_env
 import numpy as np
 from flax import struct
-
-from ...core.types import PyTree
+from tree_utils import PyTree
 
 
 @dataclass

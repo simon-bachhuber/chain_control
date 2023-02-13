@@ -7,10 +7,11 @@ import equinox as eqx
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import optax
+from tree_utils import PyTree, batch_concat, tree_concat
 
-from ..core import AbstractController, AbstractModel, PyTree
+from ..core import AbstractController, AbstractModel
 from ..core.module_utils import flatten_module
-from ..utils import batch_concat, mse, tree_concat
+from ..utils import mse
 from .minibatch import (
     Dataloader,
     MiniBatchState,

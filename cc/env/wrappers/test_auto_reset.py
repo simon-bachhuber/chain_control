@@ -3,10 +3,10 @@
 
 import numpy as np
 import pytest
+from equinox import tree_equal
 
 from cc.env.sample_envs import TWO_SEGMENT_V1
 
-from ...utils import tree_equal
 from ..make_env import make_env, make_unwrapped_env
 from .__init__ import AddRefSignalRewardFnWrapper, ReplacePhysicsByModelWrapper
 from .test_add_reference_and_reward import dummy_source

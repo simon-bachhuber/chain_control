@@ -4,6 +4,7 @@ import jax.tree_util as jtu
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
+from tree_utils import tree_slice
 
 from ...core import AbstractObservationReferenceSource
 from ...core.types import (
@@ -11,7 +12,7 @@ from ...core.types import (
     BatchedTimeSeriesOfRef,
     TimeSeriesOfRef,
 )
-from ...utils import to_jax, to_numpy, tree_slice
+from ...utils import to_jax, to_numpy
 
 
 class ObservationReferenceSource(AbstractObservationReferenceSource):

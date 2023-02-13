@@ -1,8 +1,7 @@
 from collections import OrderedDict
-from typing import Generic, NewType, TypeVar
+from typing import NewType
 
 import jax.numpy as jnp
-from tree_utils import PyTree
 
 PRNGKey = NewType("PRNGKey", jnp.ndarray)
 

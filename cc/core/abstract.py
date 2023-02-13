@@ -4,10 +4,10 @@ from typing import Callable, Tuple
 import equinox as eqx
 import jax.numpy as jnp
 import jax.tree_util as jtu
+from tree_utils import PyTree, add_batch_dim, tree_concat
 
-from ..utils import add_batch_dim, tree_concat
 from .module_utils import filter_scan_module
-from .types import BatchedTimeSeriesOfRef, PyTree, TimeSeriesOfRef
+from .types import BatchedTimeSeriesOfRef, TimeSeriesOfRef
 
 
 class AbstractObservationReferenceSource(ABC):

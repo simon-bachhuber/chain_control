@@ -4,8 +4,8 @@ import dm_env
 import jax
 import numpy as np
 from acme.jax import utils
+from tree_utils import tree_insert_IMPURE, tree_zeros_like
 
-from ...utils import tree_insert_IMPURE, zeros_like
 from .replay_element_sample import ReplayElement, ReplaySample
 
 
@@ -47,7 +47,7 @@ class Sampler:
         self._length_of_trajectories = length_of_trajectories
         self._dtype_dones = np.float32
 
-        self._extras_specs = zeros_like(toy_extras)
+        self._extras_specs = tree_zeros_like(toy_extras)
         self._obs_specs = env.observation_spec()
         self._action_specs = env.action_spec()
         self._reward_specs = env.reward_spec()

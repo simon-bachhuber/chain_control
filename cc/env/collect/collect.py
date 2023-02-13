@@ -6,6 +6,7 @@ import numpy as np
 from acme import EnvironmentLoop
 from acme.utils import loggers
 from tqdm.auto import tqdm
+from tree_utils import tree_concat, tree_shape
 
 from cc.env.wrappers import RecordVideoWrapper
 
@@ -14,7 +15,7 @@ from ...core import AbstractController
 from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
 from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
-from ...utils import to_jax, to_numpy, tree_concat, tree_shape
+from ...utils import to_jax, to_numpy
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor

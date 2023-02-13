@@ -2,9 +2,9 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
 from jax.flatten_util import ravel_pytree
+from tree_utils import batch_concat
 
 from .sample_from_spec import sample_from_tree_of_specs
-from .tree import batch_concat
 
 
 def to_jax(tree):

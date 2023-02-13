@@ -4,9 +4,9 @@ from types import FunctionType
 import dm_env
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
+from tree_utils import batch_concat, tree_slice
 
 from ...core import AbstractObservationReferenceSource
-from ...utils import batch_concat, tree_slice
 from ...utils.sample_from_spec import _spec_from_observation
 
 

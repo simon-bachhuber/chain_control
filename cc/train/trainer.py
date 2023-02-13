@@ -4,10 +4,11 @@ from typing import Optional, Union
 import equinox as eqx
 import numpy as np
 from tqdm.auto import tqdm
+from tree_utils import tree_concat
 
 from ..config import use_tqdm
 from ..core import AbstractController, AbstractModel
-from ..utils import to_numpy, tree_concat
+from ..utils import to_numpy
 from .step_fn import (
     TrainingOptionsController,
     TrainingOptionsModel,
