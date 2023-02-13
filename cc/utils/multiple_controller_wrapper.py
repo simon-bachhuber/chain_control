@@ -7,7 +7,9 @@ class MultipleControllerWrapper(AbstractController):
     controllers: tuple[AbstractController]
 
     def __init__(self, *controllers):
-        self.controllers = tuple(*controllers)  # pytype complains cause `controllers` is generator
+        self.controllers = tuple(
+            *controllers
+        )  # pytype complains cause `controllers` is generator
 
     def step(self, x):
         actions = [

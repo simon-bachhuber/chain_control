@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from tree_utils import tree_slice
+from collections import OrderedDict
 
 from ...core import AbstractObservationReferenceSource
 from ...core.types import (
@@ -18,7 +19,7 @@ from ...utils import to_jax, to_numpy
 class ObservationReferenceSource(AbstractObservationReferenceSource):
     def __init__(
         self,
-        yss: BatchedTimeSeriesOfRef,
+        yss: OrderedDict,
         ts: Optional[np.ndarray] = None,
         uss: Optional[BatchedTimeSeriesOfAct] = None,
         i_actor: int = 0,
