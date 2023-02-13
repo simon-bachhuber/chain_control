@@ -4,10 +4,10 @@ from cc.core import AbstractController
 
 
 class MultipleControllerWrapper(AbstractController):
-    controllers: list[AbstractController]
+    controllers: tuple[AbstractController]
 
     def __init__(self, *controllers):
-        self.controllers = controllers
+        self.controllers = tuple(*controllers)  # pytype complains cause `controllers` is generator
 
     def step(self, x):
         actions = [
@@ -29,7 +29,9 @@ class MultipleControllerWrapper(AbstractController):
         )
 
     def reset(self):
-        return MultipleControllerWrapper(*[cntl.reset() for cntl in self.controllers])
+        return MultipleControllerWrapper(*(cntl.reset() for cntl in self.controllers))
 
     def grad_filter_spec(self):
-        return [cntl.grad_filter_spec() for cntl in self.controllers]
+        return MultipleControllerWrapper(
+            *(cntl.grad_filter_spec() for cntl in self.controllers)
+        )
