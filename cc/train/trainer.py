@@ -4,7 +4,7 @@ from typing import Optional, Union
 import equinox as eqx
 import numpy as np
 from tqdm.auto import tqdm
-from tree_utils import tree_concat
+from tree_utils import tree_batch
 
 from ..core import AbstractController, AbstractModel
 from ..core.config import use_tqdm
@@ -68,11 +68,11 @@ class DictLogger(Logger):
         self._logs = None
 
     def log(self, metrics: dict[str, np.ndarray]):
-        metrics = tree_concat([metrics])
+        metrics = tree_batch([metrics])
         if self._logs is None:
             self._logs = metrics
         else:
-            self._logs = tree_concat([self._logs, metrics], True)
+            self._logs = tree_batch([self._logs, metrics], True)
 
     def get_logs(self):
         return self._logs

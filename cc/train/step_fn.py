@@ -7,7 +7,7 @@ import equinox as eqx
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import optax
-from tree_utils import PyTree, batch_concat, tree_concat
+from tree_utils import PyTree, batch_concat, tree_batch
 
 from ..core import AbstractController, AbstractModel
 from ..core.module_utils import flatten_module
@@ -144,7 +144,7 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
             model = eqx.apply_updates(model, updates)
 
         # concat logs
-        stacked_logs = tree_concat(minibatched_logs, False, "jax")
+        stacked_logs = tree_batch(minibatched_logs, False, "jax")
         logs = jtu.tree_map(lambda arr: jnp.mean(arr, axis=0), stacked_logs)
 
         # eval metrices
@@ -236,7 +236,7 @@ def make_step_fn_controller(
             controller = eqx.apply_updates(controller, updates)
 
         # concat logs
-        stacked_logs = tree_concat(minibatched_logs, False, "jax")
+        stacked_logs = tree_batch(minibatched_logs, False, "jax")
         logs = jtu.tree_map(lambda arr: jnp.mean(arr, axis=0), stacked_logs)
 
         return controller, opt_state, minibatch_state, logs

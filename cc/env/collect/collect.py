@@ -6,7 +6,7 @@ import numpy as np
 from acme import EnvironmentLoop
 from acme.utils import loggers
 from tqdm.auto import tqdm
-from tree_utils import tree_concat, tree_shape
+from tree_utils import tree_batch, tree_shape
 
 from ...core import AbstractController
 from ...core.config import use_tqdm
@@ -24,7 +24,7 @@ from .source import (
 
 
 def concat_samples(*samples) -> ReplaySample:
-    return tree_concat(samples, True)
+    return tree_batch(samples, True)
 
 
 def sample_feedforward_and_collect(
@@ -58,7 +58,7 @@ def collect_exhaust_source(
     # concat samples
     sample = concat_samples(*samples)
 
-    return sample, tree_concat(loop_results)
+    return sample, tree_batch(loop_results)
 
 
 def collect(
@@ -106,7 +106,7 @@ def sample_feedforward_collect_and_make_source(
 
     sample = concat_samples(*samples)
     source = ObservationReferenceSource(sample.obs, ts, sample.action)
-    return source, sample, tree_concat(loop_results)
+    return source, sample, tree_batch(loop_results)
 
 
 def collect_random_step_source(

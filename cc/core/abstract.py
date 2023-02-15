@@ -4,7 +4,7 @@ from typing import Callable, Tuple
 import equinox as eqx
 import jax.numpy as jnp
 import jax.tree_util as jtu
-from tree_utils import PyTree, add_batch_dim, tree_concat
+from tree_utils import PyTree, add_batch_dim, tree_batch
 
 from .module_utils import filter_scan_module
 from .types import BatchedTimeSeriesOfRef, TimeSeriesOfRef
@@ -57,7 +57,7 @@ class AbstractModel(eqx.Module, ABC):
         time_series_of_y = filter_scan_module(scan_fn, model, time_series_of_x, None)[1]
 
         if include_y0:
-            return tree_concat(
+            return tree_batch(
                 [add_batch_dim(model.y0()), time_series_of_y], True, "jax"
             )
         else:
