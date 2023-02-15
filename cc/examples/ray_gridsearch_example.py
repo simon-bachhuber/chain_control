@@ -4,7 +4,7 @@ import numpy as np
 import ray
 from ray import air, tune
 
-from cc.config import disable_compile_warn, disable_tqdm, force_cpu_backend
+from cc.core.config import disable_compile_warn, disable_tqdm, force_cpu_backend
 
 
 def YOUR_FUNCTION(config: dict[str, Any]) -> float:
