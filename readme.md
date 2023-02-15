@@ -22,7 +22,7 @@ Make sure that you first fulfill the following dependencies
 
 Then, check out the setup script located under `scripts/first_setup.sh`. 
 
-1. create a new conda environment for this project using `conda create -n chain_control python=3.9`
+1. create a new conda environment for this project using `conda create -n chain_control python=3.10`
 2. git clone this repository
 3. cd into the `scripts` folder and use `source first_setup.sh` file
 
