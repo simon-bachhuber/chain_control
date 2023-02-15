@@ -17,7 +17,6 @@ def disable_tqdm():
 
 _print_compile_warn = True
 
-
 def disable_compile_warn():
     global _print_compile_warn
     _print_compile_warn = False

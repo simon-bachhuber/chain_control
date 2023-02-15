@@ -1,4 +1,6 @@
+from acme.wrappers.video import MujocoVideoWrapper
+
 from .add_reference_and_reward import AddRefSignalRewardFnWrapper
+from .flat_observation import FlatObservationWrapper
 from .replace_physics_by_model import ReplacePhysicsByModelWrapper
-from .video_recorder import RecordVideoWrapper
-from acme.wrappers.video import MujocoVideoWrapper, VideoWrapper
+from .video import VideoWrapper

@@ -8,14 +8,11 @@ from acme.utils import loggers
 from tqdm.auto import tqdm
 from tree_utils import tree_concat, tree_shape
 
-from cc.env.wrappers import RecordVideoWrapper
-
-from ...core.config import use_tqdm
 from ...core import AbstractController
+from ...core.config import use_tqdm
 from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
-from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
-from ...utils import to_jax, to_numpy, timestep_array_from_env
+from ...utils import timestep_array_from_env, to_jax, to_numpy
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor
@@ -46,9 +43,6 @@ def collect_exhaust_source(
     controller: AbstractController,
     observers: Sequence[EnvLoopObserver] = (),
 ) -> Tuple[ReplaySample, dict]:
-    assert isinstance(env, AddRefSignalRewardFnWrapper) or isinstance(
-        env, RecordVideoWrapper
-    )
     source = env._source
 
     N = tree_shape(source._yss)
