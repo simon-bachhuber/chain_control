@@ -7,3 +7,4 @@ from .time_limit_control_timestep import TimelimitControltimestepWrapper
 from .track_time import TrackTimeWrapper
 from .vec_env import VectorizeEnv
 from .video_recorder import RecordVideoWrapper
+from acme.wrappers.video import MujocoVideoWrapper, VideoWrapper

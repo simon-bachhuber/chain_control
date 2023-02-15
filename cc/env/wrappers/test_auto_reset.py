@@ -15,7 +15,7 @@ from .test_replace_physics_by_model import dummy_model
 N_STEPS_FOR_EPISODE = 1001
 action = np.array([1.0])
 env_unwrapped = make_unwrapped_env(
-    TWO_SEGMENT_V1, random=1, time_limit=10, control_timestep=0.01
+    TWO_SEGMENT_V1, time_limit=10, control_timestep=0.01
 )
 env = make_env("two_segments_v1", random=1)
 

@@ -154,7 +154,7 @@ def _load_physics(cart_params: Union[List[CartParams], CartParams]) -> SegmentPh
 def load_physics(
     cart_params: Union[List[CartParams], CartParams]
 ) -> Callable[[], mujoco.Physics]:
-    def load_physics_helper():
+    def load_physics_helper(**kwargs):
         return _load_physics(cart_params)
 
     return load_physics_helper
