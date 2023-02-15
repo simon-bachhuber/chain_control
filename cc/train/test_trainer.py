@@ -41,7 +41,7 @@ def test_trainer():
     model = make_neural_ode_model(
         env.action_spec(),
         env.observation_spec(),
-        env.control_timestep,
+        env.control_timestep(),
         state_dim=1,
         f_depth=0,
         u_transform=jnp.arctan,
@@ -91,7 +91,7 @@ def test_trainer():
     controller = make_neural_ode_controller(
         env_w_source.observation_spec(),
         env.action_spec(),
-        env.control_timestep,
+        env.control_timestep(),
         1,
         f_depth=0,
     )
@@ -122,7 +122,7 @@ def test_trainer():
     model2 = make_neural_ode_model(
         env.action_spec(),
         env.observation_spec(),
-        env.control_timestep,
+        env.control_timestep(),
         state_dim=2,
         f_depth=0,
         u_transform=jnp.arctan,

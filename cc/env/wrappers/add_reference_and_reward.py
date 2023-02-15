@@ -4,10 +4,12 @@ from types import FunctionType
 import dm_env
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
+from dm_control.rl.control import Environment
 from tree_utils import batch_concat, tree_slice
 
 from ...core import AbstractObservationReferenceSource
 from ...utils.sample_from_spec import _spec_from_observation
+from ...utils.utils import timestep_array_from_env
 
 
 def default_reward_fn(obs, obs_ref) -> np.ndarray:
@@ -19,14 +21,14 @@ def default_reward_fn(obs, obs_ref) -> np.ndarray:
 class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
     def __init__(
         self,
-        environment: dm_env.Environment,
+        environment: Environment,
         source: AbstractObservationReferenceSource,
         reward_fn: FunctionType = default_reward_fn,
     ):
         self._source = source
 
         if source._ts is not None:
-            assert np.all(np.asarray(environment.ts) == source._ts)
+            assert np.all(np.asarray(timestep_array_from_env(environment)) == source._ts)
 
         reward_spec = environment.reward_spec()
         assert reward_spec.shape == ()
@@ -41,7 +43,7 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         padded_obs = OrderedDict()
         padded_obs["obs"] = timestep.observation
         padded_obs["ref"] = tree_slice(
-            self._source.get_reference_actor(), self.i_timestep
+            self._source.get_reference_actor(), self._i_timestep
         )
 
         # calculate reward
@@ -57,16 +59,23 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         return timestep
 
     def step(self, action) -> dm_env.TimeStep:
-        if self.requires_reset:
+        # This is guaranteed to happen after `__init__`
+        if self._reset_next_step:
             return self.reset()
+        
+        self._i_timestep += 1
 
         timestep = super().step(action)
         return self._modify_timestep(timestep)
 
     def reset(self) -> dm_env.TimeStep:
+        self._i_timestep = 0
         timestep = super().reset()
         return self._modify_timestep(timestep)
 
     def observation_spec(self):
-        timestep = self._modify_timestep(super().reset())
+        # TODO 
+        # the fact that this method resets the environment
+        # is kind of dangerous and surprising
+        timestep = self.reset()
         return _spec_from_observation(timestep.observation)

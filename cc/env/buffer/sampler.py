@@ -6,6 +6,7 @@ import numpy as np
 from acme.jax import utils
 from tree_utils import tree_insert_IMPURE, tree_zeros_like
 
+from ...utils.utils import timestep_array_from_env
 from .replay_element_sample import ReplayElement, ReplaySample
 
 
@@ -59,7 +60,7 @@ class Sampler:
         self._sample_with_replacement = sample_with_replacement
 
         if episodic:
-            self.n = len(env.ts)
+            self.n = len(timestep_array_from_env(env))
         else:
             self.n = self._length_of_trajectories
 

@@ -4,6 +4,7 @@ import dm_env
 import equinox as eqx
 import numpy as np
 from acme.wrappers import EnvironmentWrapper
+from dm_control.rl.control import Environment
 
 from ...core import AbstractModel
 from ...core.types import Observation
@@ -13,7 +14,7 @@ from ...utils import to_jax, to_numpy
 class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
     def __init__(
         self,
-        env: dm_env.Environment,
+        env: Environment,
         model: AbstractModel,
         process_observation: Callable = lambda obs: obs,
         y0_from_env: bool = False,
@@ -60,7 +61,7 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
 
     def step(self, action: Union[list, np.ndarray]) -> dm_env.TimeStep:
 
-        if self.requires_reset:
+        if self._reset_next_step:
             return self.reset()
 
         ts = super().step(action)

@@ -4,6 +4,7 @@ import pytest
 from absl.testing import absltest
 from dm_env import test_utils
 
+from ..utils.utils import time_limit_from_env, timestep_array_from_env
 from .make_env import make_env
 
 LENGTH_ACTION_SEQUENCE = 2001
@@ -122,9 +123,8 @@ def test_time_limit_control_timestep(env_id, time_limit, control_timestep, n_ste
         env_id, time_limit=time_limit, control_timestep=control_timestep, random=1
     )
     assert len(unroll_env(env)) == n_steps
-    assert env.time_limit == time_limit
-    assert env.control_timestep == control_timestep
-    assert (env.ts == np.arange(time_limit, step=control_timestep)).all()
+    assert time_limit_from_env(env) == time_limit
+    assert (timestep_array_from_env(env) == np.arange(time_limit, step=control_timestep)).all()
 
 
 DYNAMIC_INPUTS = [

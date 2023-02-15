@@ -11,6 +11,7 @@ from .adder import Adder
 from .make_buffer_adder_iterator import make_episodic_buffer_adder_iterator
 from .replay_buffer import RayReplayBuffer, buffer_to_iterator
 from .sampler import Sampler
+from ...utils.utils import timestep_array_from_env
 
 
 def env_fn(time_limit, control_timestep):
@@ -134,7 +135,7 @@ def test_episodic_ray_buffer(time_limit, control_timestep, n_timesteps):
     sample_sync = next(iterator)
 
     buffer = RayReplayBuffer.remote(
-        sampler=Sampler(env, len(env.ts), episodic=True, sample_with_replacement=False)
+        sampler=Sampler(env, len(timestep_array_from_env(env)), episodic=True, sample_with_replacement=False)
     )
 
     loops = [RayEnvironmentLoop.remote(buffer, i, env_fn_const) for i in range(3)]
@@ -142,13 +143,13 @@ def test_episodic_ray_buffer(time_limit, control_timestep, n_timesteps):
         # otherwise the ordering of the 3 trajectories is ambiguous
         ray.get(loop.run_episode.remote())
 
-    assert ray.get(buffer.len.remote()) == 3 * len(env.ts)
+    assert ray.get(buffer.len.remote()) == 3 * len(timestep_array_from_env(env))
 
     iterator = buffer_to_iterator(buffer, 3, force_batch_size=False)
     sample_async1 = next(iterator)
 
     assert sample_async1.bs == 3
-    assert sample_async1.n_timesteps == len(env.ts)
+    assert sample_async1.n_timesteps == len(timestep_array_from_env(env))
     assert tree_equal(sample_sync.action, sample_async1.action)
     assert tree_equal(sample_sync, sample_async1)
 
@@ -158,7 +159,7 @@ def test_episodic_ray_buffer(time_limit, control_timestep, n_timesteps):
     for loop in loops:
         ray.get(loop.run_episode.remote())
 
-    assert ray.get(buffer.len.remote()) == 3 * len(env.ts)
+    assert ray.get(buffer.len.remote()) == 3 * len(timestep_array_from_env(env))
     sample_async2 = next(iterator)
     assert tree_equal(sample_async1, sample_async2)
 

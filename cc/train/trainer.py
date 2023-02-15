@@ -6,7 +6,7 @@ import numpy as np
 from tqdm.auto import tqdm
 from tree_utils import tree_concat
 
-from ..config import use_tqdm
+from ..core.config import use_tqdm
 from ..core import AbstractController, AbstractModel
 from ..utils import to_numpy
 from .step_fn import (

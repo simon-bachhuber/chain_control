@@ -6,13 +6,6 @@ from acme.wrappers import SinglePrecisionWrapper
 from dm_control import mujoco
 from dm_control.rl import control
 
-from .wrappers import (
-    DelayActionWrapper,
-    TimelimitControltimestepWrapper,
-    TrackTimeWrapper,
-)
-
-
 @dataclass
 class EnvConfig:
     load_physics: Callable[[], mujoco.Physics]
@@ -82,23 +75,10 @@ def make_env_from_config(
     task_kwargs = {},
     physics_kwargs = {},
     **kwargs
-) -> TimelimitControltimestepWrapper:  # TODO pytype will fight you on this
+):
     env, time_limit, control_timestep = _make_almost_unwrapped_env(
         env_config, time_limit, control_timestep, single_precision, task_kwargs, physics_kwargs
     )
-
-    if delay > 0:
-        env = DelayActionWrapper(env, delay)
-
-    # add some metadata
-    env = TimelimitControltimestepWrapper(
-        env,
-        time_limit=time_limit,
-        control_timestep=control_timestep,
-        delay=delay,
-    )
-
-    env = TrackTimeWrapper(env)
 
     return env
 
@@ -112,7 +92,7 @@ def make_env(
     task_kwargs = {},
     physics_kwargs = {},
     **kwargs
-) -> TimelimitControltimestepWrapper:
+):
     # prevent circular import
     from cc.env.sample_envs import _id_accessible_envs
 

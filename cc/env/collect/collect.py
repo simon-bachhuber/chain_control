@@ -10,12 +10,12 @@ from tree_utils import tree_concat, tree_shape
 
 from cc.env.wrappers import RecordVideoWrapper
 
-from ...config import use_tqdm
+from ...core.config import use_tqdm
 from ...core import AbstractController
 from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
 from ...env.wrappers import AddRefSignalRewardFnWrapper
 from ...examples.feedforward_controller import make_feedforward_controller
-from ...utils import to_jax, to_numpy
+from ...utils import to_jax, to_numpy, timestep_array_from_env
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
 from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor
@@ -100,7 +100,7 @@ def sample_feedforward_collect_and_make_source(
 ) -> Tuple[ObservationReferenceSource, ReplaySample, dict]:
     assert len(seeds) > 0
 
-    ts = env.ts
+    ts = timestep_array_from_env(env)
 
     samples, loop_results = [], []
     for seed in seeds:
@@ -118,7 +118,7 @@ def sample_feedforward_collect_and_make_source(
 def collect_random_step_source(
     env: dm_env.Environment, seeds: list[int], amplitude: float = 3.0
 ):
-    ts = env.ts
+    ts = timestep_array_from_env(env)
     yss = np.zeros((len(seeds), len(ts) + 1, 1))
 
     for i, seed in enumerate(seeds):
