@@ -16,7 +16,7 @@
 
   <default>
     <joint type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-120 120" damping="0.1"/>
-    <muscle ctrllimited="true" ctrlrange="0 1"/>
+    <muscle ctrllimited="false" ctrlrange="0 1"/>
   </default>
 
   <worldbody>

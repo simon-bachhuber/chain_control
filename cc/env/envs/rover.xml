@@ -11,7 +11,7 @@
 	<include file="./common/materials.xml"/>
 
     <compiler inertiafromgeom="true" angle="degree"/>
-	<option	timestep="0.02" gravity="0 0 -9.81"/>
+	<option	timestep="0.01" gravity="0 0 -9.81"/>
 	
 	<asset>
 		<material name="MatWheel" specular="1" rgba=".1 .1 .1 1"/>
@@ -71,6 +71,9 @@
 			<body name="ghost-steer-wheel" pos="0 0 .2">
                 <joint name="ghost-steer-hinge" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-17 17" damping="0"/>
 				<geom type="cylinder" size=".05 .01" axisangle="1 0 0 90" contype="2" conaffinity="2" mass="0.002"/>
+			</body>
+			<body name="ghost-steer-wheel-at-front" pos="0.2 0 .2"> 
+			<geom type="cylinder" size=".05 .01" axisangle="1 0 0 90" contype="2" conaffinity="2" mass="0.002"/>
 			</body>
 			<body name="f-l-wheel" pos=".2 0.15 -.15">
 				<geom type="capsule" size = ".005" fromto="0 0 0 0 0 .08" contype="2" conaffinity="2"/>
