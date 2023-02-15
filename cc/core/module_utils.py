@@ -2,7 +2,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
-from acme.jax.utils import batch_concat
+from tree_utils import batch_concat
 
 
 def filter_scan_module(scan_fn, init, xs, length, filter_spec=eqx.is_array):
