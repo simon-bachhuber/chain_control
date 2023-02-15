@@ -1,13 +1,15 @@
-from .common import ASSETS, read_model
-from dm_control import mujoco
-import numpy as np
-from dm_control.rl import control 
 from collections import OrderedDict
+
+import numpy as np
+from dm_control import mujoco
+from dm_control.rl import control
 from dm_env import specs as dm_env_specs
+
 from ...utils.sample_from_spec import _spec_from_observation
+from .common import ASSETS, read_model
+
 
 class Physics(mujoco.Physics):
-
     def set_steering_angle(self, u):
         """In radians."""
         drive = self.control()[1:]
@@ -21,9 +23,9 @@ class Physics(mujoco.Physics):
                 u = np.array([0.5])
             elif current_rover_angle <= -30.0:
                 u = np.array([-0.5])
-        
+
         u = np.tanh(u) * 0.29
-            
+
         self.set_control(np.concatenate((u, drive)))
 
     def set_drive(self, u):
@@ -37,19 +39,18 @@ class Physics(mujoco.Physics):
         return self.get_xy_position("ghost-steer-wheel")
 
     def get_xy_position_at_front(self):
-        return self.get_xy_position("ghost-steer-wheel-at-front")  
-    
+        return self.get_xy_position("ghost-steer-wheel-at-front")
+
     def get_rover_angle_from_straight_dir_deg(self):
         forward_dir = self.get_xy_position_at_front() - self.get_xy_position_at_center()
         return np.rad2deg(np.arctan2(forward_dir[1], forward_dir[0]))
-    
 
 
 def load_physics(**physics_kwargs):
     return Physics.from_xml_string(read_model("rover.xml"), assets=ASSETS)
 
-class Task_Steering(control.Task):
 
+class Task_Steering(control.Task):
     def __init__(self, drive: float = 0.66, random: int = 1):
         # seed is unused
         del random
@@ -57,7 +58,7 @@ class Task_Steering(control.Task):
         super().__init__()
 
     def initialize_episode(self, physics):
-        pass 
+        pass
 
     def before_step(self, action, physics: Physics):
         action = np.atleast_1d(action)
@@ -65,7 +66,7 @@ class Task_Steering(control.Task):
         physics.set_steering_angle(action)
 
     def after_step(self, physics):
-        pass 
+        pass
 
     def action_spec(self, physics):
         return dm_env_specs.BoundedArray(
@@ -87,4 +88,3 @@ class Task_Steering(control.Task):
 
     def observation_spec(self, physics):
         return _spec_from_observation(self.get_observation(physics))
-    

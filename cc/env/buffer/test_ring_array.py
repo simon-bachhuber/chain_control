@@ -5,7 +5,6 @@ from .ring_array import RingArray
 
 def test_indexing():
     for dtype in [np.float32, np.float64]:
-
         arr = RingArray(maxlen=3, dtype=dtype)
         arr.append(1.0)
         assert (arr[:] == np.array([[1.0]], dtype=dtype)).all()

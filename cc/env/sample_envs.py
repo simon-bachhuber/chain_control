@@ -1,9 +1,8 @@
 from typing import Final
 
+from .envs import muscle, rover
 from .envs.two_segments import CartParams, JointParams, generate_env_config
 from .make_env import EnvConfig
-from .envs import muscle, rover
-
 
 TWO_SEGMENT_V1: Final = generate_env_config(
     CartParams(
@@ -34,12 +33,6 @@ _id_accessible_envs: Final = {
     "two_segments_v1": TWO_SEGMENT_V1,
     "two_segments_v2": TWO_SEGMENT_V2,
     "two_segments_v3": TWO_SEGMENT_V3,
-    "muscle_siso": EnvConfig(
-        muscle.load_physics,
-        muscle.Task
-    ),
-    "rover": EnvConfig(
-        rover.load_physics,
-        rover.Task_Steering
-    )
+    "muscle_siso": EnvConfig(muscle.load_physics, muscle.Task),
+    "rover": EnvConfig(rover.load_physics, rover.Task_Steering),
 }

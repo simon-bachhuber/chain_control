@@ -6,8 +6,8 @@ import numpy as np
 from tqdm.auto import tqdm
 from tree_utils import tree_concat
 
-from ..core.config import use_tqdm
 from ..core import AbstractController, AbstractModel
+from ..core.config import use_tqdm
 from ..utils import to_numpy
 from .step_fn import (
     TrainingOptionsController,
@@ -42,7 +42,6 @@ class Tracker:
 
         current_metric = np.mean(list(self.metric))
         if current_metric < self._associated_metric:
-
             self._associated_metric = current_metric
             self._best_model = model
 
@@ -92,7 +91,6 @@ class ModelControllerTrainer:
         trackers: list[Tracker] = [],
         jit: bool = True,
     ):
-
         assert not (
             model_train_options is not None and controller_train_options is not None
         ), """Specify only `TrainingOptionsModel` or `TrainingOptionsController`
@@ -139,7 +137,6 @@ class ModelControllerTrainer:
         self.pbar.set_description(s)
 
     def step(self, i_step: int = 0):
-
         if self._model:
             self._model, self._opt_state, self._minibatch_state, logs = self._step_fn(
                 self._model, self._opt_state, self._minibatch_state

@@ -38,7 +38,6 @@ def make_neural_ode_controller(
     g_activation=jax.nn.relu,
     g_final_activation=lambda x: x,
 ):
-
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
     input_dim = batch_concat(toy_input, 0).size
@@ -101,7 +100,6 @@ def make_neural_ode_controller(
             return NeuralOdeController(self.f, self.g, self.init_state, self.init_state)
 
         def step(self, u):  # u has shape identical to (`toy_input`, PRNGKey)
-
             u, key = u
 
             if has_time_state:

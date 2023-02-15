@@ -50,7 +50,6 @@ def make_neural_ode_model(
     g_final_activation=lambda x: x,
     u_transform=lambda u: u,
 ):
-
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
     input_dim = batch_concat(toy_input, 0).size

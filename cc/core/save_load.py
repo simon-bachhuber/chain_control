@@ -11,7 +11,6 @@ def load(path):
 
 
 def save(obj, path, metadata={}, verbose=True):
-
     if isinstance(obj, eqx.Module):
         raise Exception(
             """Not possible. Use `eqx.tree_serialise_leaves(path, obj)` instead.

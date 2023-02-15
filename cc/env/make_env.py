@@ -6,6 +6,7 @@ from acme.wrappers import SinglePrecisionWrapper
 from dm_control import mujoco
 from dm_control.rl import control
 
+
 @dataclass
 class EnvConfig:
     load_physics: Callable[[], mujoco.Physics]
@@ -13,9 +14,12 @@ class EnvConfig:
 
 
 def _make_unwrapped_env(
-    env_config: EnvConfig, time_limit: float, control_timestep: float, task_kwargs, physics_kwargs
+    env_config: EnvConfig,
+    time_limit: float,
+    control_timestep: float,
+    task_kwargs,
+    physics_kwargs,
 ):
-
     physics = env_config.load_physics(**physics_kwargs)
     task = env_config.task(**task_kwargs)
 
@@ -25,11 +29,15 @@ def _make_unwrapped_env(
 
 
 def make_unwrapped_env(
-    env_config: EnvConfig, time_limit: float, control_timestep: float, task_kwargs = {}, physics_kwargs = {}
+    env_config: EnvConfig,
+    time_limit: float,
+    control_timestep: float,
+    task_kwargs={},
+    physics_kwargs={},
 ) -> dm_env.Environment:
-    return _make_unwrapped_env(env_config, time_limit, control_timestep, task_kwargs, physics_kwargs)[
-        0
-    ]
+    return _make_unwrapped_env(
+        env_config, time_limit, control_timestep, task_kwargs, physics_kwargs
+    )[0]
 
 
 def _make_almost_unwrapped_env(
@@ -38,7 +46,7 @@ def _make_almost_unwrapped_env(
     control_timestep: float,
     single_precision: bool,
     task_kwargs,
-    physics_kwargs
+    physics_kwargs,
 ):
     env, time_limit, control_timestep = _make_unwrapped_env(
         env_config, time_limit, control_timestep, task_kwargs, physics_kwargs
@@ -55,10 +63,12 @@ def make_almost_unwrapped_env(
     time_limit: float,
     control_timestep: float,
     single_precision: Optional[bool] = True,
-    task_kwargs = {},
-    physics_kwargs = {}
+    task_kwargs={},
+    physics_kwargs={},
 ) -> dm_env.Environment:
-    env = make_unwrapped_env(env_config, time_limit, control_timestep, task_kwargs, physics_kwargs)
+    env = make_unwrapped_env(
+        env_config, time_limit, control_timestep, task_kwargs, physics_kwargs
+    )
 
     if single_precision:
         env = SinglePrecisionWrapper(env)
@@ -72,12 +82,17 @@ def make_env_from_config(
     control_timestep: float = 0.01,
     single_precision: Optional[bool] = True,
     delay: int = 0,
-    task_kwargs = {},
-    physics_kwargs = {},
-    **kwargs
+    task_kwargs={},
+    physics_kwargs={},
+    **kwargs,
 ):
     env, time_limit, control_timestep = _make_almost_unwrapped_env(
-        env_config, time_limit, control_timestep, single_precision, task_kwargs, physics_kwargs
+        env_config,
+        time_limit,
+        control_timestep,
+        single_precision,
+        task_kwargs,
+        physics_kwargs,
     )
 
     return env
@@ -89,9 +104,9 @@ def make_env(
     control_timestep: float = 0.01,
     single_precision: Optional[bool] = True,
     delay: int = 0,
-    task_kwargs = {},
-    physics_kwargs = {},
-    **kwargs
+    task_kwargs={},
+    physics_kwargs={},
+    **kwargs,
 ):
     # prevent circular import
     from cc.env.sample_envs import _id_accessible_envs
@@ -105,5 +120,11 @@ def make_env(
     env_config = _id_accessible_envs[id]
 
     return make_env_from_config(
-        env_config, time_limit, control_timestep, single_precision, delay, task_kwargs, physics_kwargs
+        env_config,
+        time_limit,
+        control_timestep,
+        single_precision,
+        delay,
+        task_kwargs,
+        physics_kwargs,
     )

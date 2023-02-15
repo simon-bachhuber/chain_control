@@ -1,18 +1,20 @@
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
+from dm_control.rl import control
 from jax.flatten_util import ravel_pytree
 from tree_utils import batch_concat
 
 from .sample_from_spec import sample_from_tree_of_specs
-from dm_control.rl import control
 
 
 def time_limit_from_env(env: control.Environment) -> float:
     return env.control_timestep() * env._step_limit
 
-def timestep_array_from_env(env: control.Environment) -> float:
+
+def timestep_array_from_env(env: control.Environment) -> np.ndarray:
     return np.arange(time_limit_from_env(env), step=env.control_timestep())
+
 
 def to_jax(tree):
     return jtu.tree_map(jnp.asarray, tree)

@@ -1,7 +1,7 @@
+from ...utils.utils import timestep_array_from_env
 from .adder import Adder
 from .replay_buffer import ReplayBuffer, buffer_to_iterator
 from .sampler import Sampler
-from ...utils.utils import timestep_array_from_env
 
 
 def make_episodic_buffer_adder_iterator(
@@ -11,7 +11,6 @@ def make_episodic_buffer_adder_iterator(
     buffer_size_n_trajectories: int = 30,
     force_batch_size: bool = True,
 ):
-    
     ts = timestep_array_from_env(env)
 
     buffer = ReplayBuffer(

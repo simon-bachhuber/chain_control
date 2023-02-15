@@ -2,9 +2,9 @@ from absl.testing import absltest
 from dm_env import test_utils
 
 from ...examples.neural_ode_model_compact_example import make_neural_ode_model
+from ...utils.utils import time_limit_from_env, timestep_array_from_env
 from ..make_env import make_env
 from .replace_physics_by_model import ReplacePhysicsByModelWrapper
-from ...utils.utils import time_limit_from_env, timestep_array_from_env
 
 LENGTH_ACTION_SEQUENCE = 2001
 

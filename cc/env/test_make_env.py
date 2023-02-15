@@ -124,7 +124,9 @@ def test_time_limit_control_timestep(env_id, time_limit, control_timestep, n_ste
     )
     assert len(unroll_env(env)) == n_steps
     assert time_limit_from_env(env) == time_limit
-    assert (timestep_array_from_env(env) == np.arange(time_limit, step=control_timestep)).all()
+    assert (
+        timestep_array_from_env(env) == np.arange(time_limit, step=control_timestep)
+    ).all()
 
 
 DYNAMIC_INPUTS = [

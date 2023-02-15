@@ -125,7 +125,6 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
     optimizer = options.optimizer
 
     def step_fn_model(model: AbstractModel, opt_state, minibatch_state: MiniBatchState):
-
         minibatched_logs = []
         for _ in range(minibatch_state.n_minibatches):
             minibatch_state, minibatched_dataset = options.training_data.update_fn(
@@ -225,7 +224,6 @@ def make_step_fn_controller(
     def step_fn_controller(
         controller: AbstractController, opt_state, minibatch_state: MiniBatchState
     ):
-
         minibatched_logs = []
         for i in range(minibatch_state.n_minibatches):
             minibatch_state, batch_of_refss = options.refss.update_fn(minibatch_state)

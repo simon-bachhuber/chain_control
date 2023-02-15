@@ -17,7 +17,6 @@ class _TransitionAccumulation:
         self.reset()
 
     def first_transition(self, ele: ReplayElement) -> bool:
-
         if self.episodic:
             if ele.timestep.first():
                 return True
@@ -95,7 +94,6 @@ class Sampler:
     def draw_idxs_from_weights(
         self, weights: np.ndarray, dones: np.ndarray, bs: int
     ) -> Iterable[int]:
-
         # sample only ReplayElements that are at the last timestep
         if self._episodic:
             weights *= dones
@@ -117,7 +115,6 @@ class Sampler:
         return idxs
 
     def sample(self, samples: list[ReplayElement], bs=None) -> ReplaySample:
-
         if bs is None:
             bs = len(samples)
 
@@ -130,7 +127,6 @@ class Sampler:
         ) = self._preallocate(bs, self.n)
 
         for i, sample in enumerate(samples):
-
             trajectory = []
             while True:
                 trajectory.append(sample)
@@ -154,7 +150,6 @@ class Sampler:
             trajectory.reverse()
 
             for t, sample in enumerate(trajectory):
-
                 tree_insert_IMPURE(alloc_extras, sample.extras, (i, t))
 
                 tree_insert_IMPURE(alloc_obs, sample.timestep.observation, (i, t))

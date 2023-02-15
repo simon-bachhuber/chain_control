@@ -7,7 +7,8 @@ import jax.tree_util as jtu
 from cc import load
 from cc.env.collect.source import ObservationReferenceSource
 from cc.env.make_env import make_env
-from cc.env.wrappers import AddRefSignalRewardFnWrapper, TimelimitControltimestepWrapper
+from cc.env.wrappers import AddRefSignalRewardFnWrapper
+from cc.utils.utils import timestep_array_from_env
 from cc.utils.visual.viewer import launch_viewer_controller
 
 env = make_env("two_segments_v2", random=1, time_limit=10.0)  # <- CHANGE THIS LINE
@@ -30,8 +31,8 @@ class InteractiveSource(ObservationReferenceSource):
         )
 
 
-def make_interactive_env(pipe_conn, env: TimelimitControltimestepWrapper):
-    ts = env.ts
+def make_interactive_env(pipe_conn, env):
+    ts = timestep_array_from_env(env)
     N = len(ts) + 1
     ys_ones = jtu.tree_map(
         lambda arr: jnp.ones((1, N, *arr.shape)), env.observation_spec()

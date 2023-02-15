@@ -19,7 +19,6 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         process_observation: Callable = lambda obs: obs,
         y0_from_env: bool = False,
     ):
-
         super().__init__(env)
         self._model = model
         self._y0_from_env = y0_from_env
@@ -43,7 +42,6 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
     def _build_timestep(
         self, step_type: dm_env.StepType, obs: Observation
     ) -> dm_env.TimeStep:
-
         # envs return OrderedDict of numpy-values
         obs = self._process_obs(to_numpy(obs))
 
@@ -60,7 +58,6 @@ class ReplacePhysicsByModelWrapper(EnvironmentWrapper):
         return dm_env.TimeStep(step_type, rew, discount, obs)
 
     def step(self, action: Union[list, np.ndarray]) -> dm_env.TimeStep:
-
         if self._reset_next_step:
             return self.reset()
 

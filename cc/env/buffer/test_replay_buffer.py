@@ -6,12 +6,12 @@ from equinox import tree_equal
 from tree_utils import tree_slice
 
 from ...env import make_env
+from ...utils.utils import timestep_array_from_env
 from ..collect.actor import RandomActor
 from .adder import Adder
 from .make_buffer_adder_iterator import make_episodic_buffer_adder_iterator
 from .replay_buffer import RayReplayBuffer, buffer_to_iterator
 from .sampler import Sampler
-from ...utils.utils import timestep_array_from_env
 
 
 def env_fn(time_limit, control_timestep):
@@ -35,7 +35,6 @@ def env_fn(time_limit, control_timestep):
 def test_episodic_buffer_adder_iterator(
     time_limit, control_timestep, bs_of_iterator, n_timesteps
 ):
-
     env = env_fn(time_limit, control_timestep)
 
     buffer, adder, iterator = make_episodic_buffer_adder_iterator(
@@ -135,7 +134,12 @@ def test_episodic_ray_buffer(time_limit, control_timestep, n_timesteps):
     sample_sync = next(iterator)
 
     buffer = RayReplayBuffer.remote(
-        sampler=Sampler(env, len(timestep_array_from_env(env)), episodic=True, sample_with_replacement=False)
+        sampler=Sampler(
+            env,
+            len(timestep_array_from_env(env)),
+            episodic=True,
+            sample_with_replacement=False,
+        )
     )
 
     loops = [RayEnvironmentLoop.remote(buffer, i, env_fn_const) for i in range(3)]

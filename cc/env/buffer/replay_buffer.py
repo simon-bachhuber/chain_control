@@ -55,7 +55,6 @@ class _ReplayBuffer:
         self.reset()
 
     def reset(self):
-
         self._deque = deque(maxlen=self.maxlen)
         self._dones = RingArray(maxlen=self.maxlen)
         self._weights = RingArray(maxlen=self.maxlen)
@@ -71,7 +70,6 @@ class _ReplayBuffer:
         return len(self._deque)
 
     def _sample(self, bs: int, force_batch_size) -> ReplaySample:
-
         self._rate_limiter.count_sample_up()
 
         # update weights
@@ -94,7 +92,6 @@ class _ReplayBuffer:
         return self._sampler.sample([deque_as_list[idx] for idx in idxs], pre_alloc_bs)
 
     def _insert(self, replay_element: ReplayElement, actor_id):
-
         self._rate_limiter.count_insert_up()
 
         # TODO What is up with that part?

@@ -53,7 +53,6 @@ def make_dataloader(
     tree_transform: Optional[Callable] = None,
     do_bootstrapping: bool = False,
 ) -> Dataloader:
-
     if not isinstance(
         dataset, (SupervisedDataset, SupervisedDatasetWithWeights, UnsupervisedDataset)
     ):

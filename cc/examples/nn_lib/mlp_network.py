@@ -18,7 +18,6 @@ def mlp_network(
     sizes = [in_size] + depth * [width] + [out_size]
 
     for i, (s_in, s_out) in enumerate(zip(sizes[:-1], sizes[1:])):
-
         if use_dropout:
             layers.append(eqx.nn.Dropout(dropout_rate))
 

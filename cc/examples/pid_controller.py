@@ -17,7 +17,6 @@ def preprocess_error_as_controller_input(x) -> jnp.ndarray:
 def make_pid_controller(
     p_gain: float, i_gain: float, d_gain: float, control_timestep: float
 ):
-
     init_state = {"last_error": jnp.array([0.0]), "sum_of_errors": jnp.array([0.0])}
     init_params = {
         "p_gain": jnp.array([p_gain]),

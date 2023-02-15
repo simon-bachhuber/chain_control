@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Optional
 
 import jax.tree_util as jtu
@@ -5,7 +6,6 @@ import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from tree_utils import tree_slice
-from collections import OrderedDict
 
 from ...core import AbstractObservationReferenceSource
 from ...core.types import (
@@ -67,7 +67,6 @@ def constant_after_transform_source(
     after_time: Optional[float] = None,
     new_time_limit: Optional[float] = None,
 ) -> ObservationReferenceSource:
-
     if after_time is None and new_time_limit is None:
         # do nothing
         return source

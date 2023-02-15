@@ -82,7 +82,6 @@ def test_counters():
 
 
 def test_unroll():
-
     counters = make_counters()
     ys = counters.unroll(jnp.zeros((3, 1)), include_y0=False)
 

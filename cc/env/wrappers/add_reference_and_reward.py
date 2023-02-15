@@ -28,7 +28,9 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         self._source = source
 
         if source._ts is not None:
-            assert np.all(np.asarray(timestep_array_from_env(environment)) == source._ts)
+            assert np.all(
+                np.asarray(timestep_array_from_env(environment)) == source._ts
+            )
 
         reward_spec = environment.reward_spec()
         assert reward_spec.shape == ()
@@ -62,7 +64,7 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         # This is guaranteed to happen after `__init__`
         if self._reset_next_step:
             return self.reset()
-        
+
         self._i_timestep += 1
 
         timestep = super().step(action)
@@ -74,7 +76,7 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         return self._modify_timestep(timestep)
 
     def observation_spec(self):
-        # TODO 
+        # TODO
         # the fact that this method resets the environment
         # is kind of dangerous and surprising
         timestep = self.reset()

@@ -1,10 +1,12 @@
-from .common import ASSETS, read_model
-from dm_control import mujoco
-import numpy as np
-from dm_control.rl import control
 from collections import OrderedDict
+
+import numpy as np
+from dm_control import mujoco
+from dm_control.rl import control
 from dm_env import specs as dm_env_specs
+
 from ...utils.sample_from_spec import _spec_from_observation
+from .common import ASSETS, read_model
 
 
 def cocontraction(x, center=0.2, delta=0.2):

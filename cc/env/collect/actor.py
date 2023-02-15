@@ -23,7 +23,6 @@ class ModuleActor(core.Actor):
         reset_key=False,
         jit=True,
     ):
-
         self.action_spec = action_spec
         self._adder = adder
         self._controller = controller
@@ -38,7 +37,6 @@ class ModuleActor(core.Actor):
             self._adder.add_first(timestep)
 
     def reset(self):
-
         if self.reset_key:
             self._key = self._initial_key
         else:

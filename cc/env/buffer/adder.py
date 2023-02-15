@@ -56,7 +56,6 @@ class Adder(AbstractAdder):
         next_timestep: dm_env.TimeStep,
         extras: dict = {},
     ):
-
         if self._prev_ts is None:
             raise Exception()
 
