@@ -30,7 +30,7 @@ def find_data_files(package_dir, patterns, excludes=()):
 setuptools.setup(
     name="chain_control",
     packages=setuptools.find_packages(),
-    version="0.5.0",
+    version="0.6.0",
     package_data={
         "cc": find_data_files(
             "cc", patterns=["*.xml", "*.m", "*.eqx"]
@@ -50,6 +50,8 @@ setuptools.setup(
         "equinox",
         "tqdm",
         "ipykernel",
+        "ipywidgets",  # otherwise tqdm will warn
         "tree_utils @ git+https://github.com/SimiPixel/tree_utils.git",
+        "imageio[ffmpeg]",
     ],
 )
