@@ -41,13 +41,15 @@ setuptools.setup(
         # after installation run `pip list`
         # if dm_control==0.4345734 version, then
         # `pip install --upgrade dm_control`
-        "dm-acme[jax]",
-        "dm-acme[envs]",
+        "dm_acme[jax] @ git+https://github.com/deepmind/acme.git",
+        "dm_acme[envs] @ git+https://github.com/deepmind/acme.git",
+        "cloudpickle",
+        "optax",
         "scikit-learn",
         "ray",
         "equinox",
         "tqdm",
         "ipykernel",
-        "git+https://github.com/SimiPixel/tree_utils.git",
+        "tree_utils @ git+https://github.com/SimiPixel/tree_utils.git",
     ],
 )
