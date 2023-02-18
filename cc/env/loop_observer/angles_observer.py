@@ -11,7 +11,7 @@ class AnglesEnvLoopObserver(EnvLoopObserver):
         self._hinge_1, self._hinge_2 = [], []  # for pytype ..
 
     def _get_hinges_and_append(self, env):
-        hinge1, hinge2 = env.physics.named.data.qpos[["hinge_1", "hinge_2"]]
+        hinge1, hinge2 = env.physics.named.data.qpos[["cart_hinge_1", "cart_hinge_2"]]
         self._hinge_1.append(hinge1)
         self._hinge_2.append(hinge2)
 
