@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from types import FunctionType
 
 import dm_env
@@ -8,6 +7,7 @@ from dm_control.rl.control import Environment
 from tree_utils import batch_concat, tree_slice
 
 from ...core import AbstractObservationReferenceSource
+from ...train.step_fn import merge_x_y
 from ...utils.sample_from_spec import _spec_from_observation
 from ...utils.utils import timestep_array_from_env
 
@@ -42,11 +42,9 @@ class AddRefSignalRewardFnWrapper(EnvironmentWrapper):
         super().__init__(environment)
 
     def _modify_timestep(self, timestep: dm_env.TimeStep):
-        padded_obs = OrderedDict()
-        padded_obs["obs"] = timestep.observation
-        padded_obs["ref"] = tree_slice(
-            self._source.get_reference_actor(), self._i_timestep
-        )
+        ref = tree_slice(self._source.get_reference_actor(), self._i_timestep)
+        obs = timestep.observation
+        padded_obs = merge_x_y(ref, obs)
 
         # calculate reward
         # dm_env has convention that first timestep has no reward
