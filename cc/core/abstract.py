@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 import equinox as eqx
 import jax.numpy as jnp
+import jax.random as random
 import jax.tree_util as jtu
-from tree_utils import PyTree, add_batch_dim, tree_batch
+from tree_utils import PyTree, add_batch_dim, tree_batch, tree_map_flat
 
 from .module_utils import filter_scan_module
 from .types import BatchedTimeSeriesOfRef, TimeSeriesOfRef
@@ -68,6 +69,11 @@ class AbstractModel(eqx.Module, ABC):
         pass
 
 
+def _add_noise_to_output(arr, key, noise_scale):
+    noise = random.normal(key, shape=arr.shape, dtype=arr.dtype) * noise_scale
+    return arr + noise
+
+
 class AbstractController(eqx.Module, ABC):
     @abstractmethod
     def step(
@@ -83,19 +89,30 @@ class AbstractController(eqx.Module, ABC):
     def reset(self) -> "AbstractController":
         pass
 
-    def unroll(self, model: AbstractModel, merge_x_y: Callable) -> Callable:
+    def unroll(
+        self,
+        model: AbstractModel,
+        merge_x_y: Callable,
+        noise_scale: Optional[float] = None,
+    ) -> Callable:
         def unroll_closed_loop(
-            time_series_of_x: PyTree[jnp.ndarray],
+            time_series_of_x: PyTree[jnp.ndarray], key: random.PRNGKey
         ) -> PyTree[jnp.ndarray]:
             def scan_fn(carry, x):
-                (controller, model, y) = carry
+                (controller, model, y, key) = carry
                 controller, u = controller.step(merge_x_y(x, y))
                 model, y = model.step(u)
-                return (controller, model, y), (y, u)
+
+                # add noise to output
+                if noise_scale is not None:
+                    key, consume = random.split(key)
+                    y = tree_map_flat(y, _add_noise_to_output, consume, noise_scale)
+
+                return (controller, model, y, key), (y, u)
 
             (time_series_of_y, time_series_of_u) = filter_scan_module(
                 scan_fn,
-                (self.reset(), model.reset(), model.y0()),
+                (self.reset(), model.reset(), model.y0(), key),
                 time_series_of_x,
                 None,
             )[1]
