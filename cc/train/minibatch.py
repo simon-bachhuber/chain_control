@@ -1,5 +1,6 @@
 from typing import Callable, NamedTuple, Optional, Tuple, Union
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from tree_utils import PyTree, tree_dataloader, tree_shape
@@ -46,7 +47,7 @@ class Dataloader(NamedTuple):
 
 def make_dataloader(
     dataset: Dataset,
-    key: PRNGKey,
+    key: PRNGKey = jax.random.PRNGKey(1),
     n_minibatches: int = 1,
     axis: int = 0,
     reshuffle: bool = True,
