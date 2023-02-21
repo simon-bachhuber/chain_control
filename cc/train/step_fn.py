@@ -1,9 +1,10 @@
 import functools as ft
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import optax
@@ -178,6 +179,7 @@ class TrainingOptionsController:
     loss_fn_reduce_along_models: LOSS_FN_REDUCE_ALONG_MODELS = (
         default_loss_fn_reduce_along_models
     )
+    noise_scale: Optional[float] = None
 
 
 def make_step_fn_controller(
@@ -188,12 +190,14 @@ def make_step_fn_controller(
     @ft.partial(
         eqx.filter_value_and_grad, arg=controller.grad_filter_spec(), has_aux=True
     )
-    def loss_fn_controller(controller: AbstractController, refss):
+    def loss_fn_controller(controller: AbstractController, refss, keys):
         logs = {}
 
         log_of_loss_values = {}
         for model_name, model in models.items():
-            refsshat = eqx.filter_vmap(controller.unroll(model, merge_x_y))(refss)
+            refsshat = eqx.filter_vmap(
+                controller.unroll(model, merge_x_y, options.noise_scale)
+            )(refss, keys)
             loss_name_and_value = options.loss_fn(refss, refsshat)
             log_of_loss_values.update({model_name: loss_name_and_value})
 
@@ -228,7 +232,17 @@ def make_step_fn_controller(
         for i in range(minibatch_state.n_minibatches):
             minibatch_state, batch_of_refss = options.refss.update_fn(minibatch_state)
             assert isinstance(batch_of_refss, UnsupervisedDataset)
-            (loss, logs), grads = loss_fn_controller(controller, batch_of_refss.refss)
+
+            # steal key for simulation of noise in closed loop
+            key = minibatch_state.key
+            key, consume = jax.random.split(key)
+            minibatch_state = minibatch_state._replace(key=key)
+
+            (loss, logs), grads = loss_fn_controller(
+                controller,
+                batch_of_refss.refss,
+                jax.random.split(consume, minibatch_state.minibatch_size),
+            )
             logs.update(dict(train_loss=loss))
             minibatched_logs.append(logs)
 
