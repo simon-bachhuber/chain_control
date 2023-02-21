@@ -41,8 +41,8 @@ setuptools.setup(
         # after installation run `pip list`
         # if dm_control==0.4345734 version, then
         # `pip install --upgrade dm_control`
-        "dm_acme[jax] @ git+https://github.com/deepmind/acme.git",
-        "dm_acme[envs] @ git+https://github.com/deepmind/acme.git",
+        "dm_acme[jax]",
+        "dm_acme[envs]",
         "cloudpickle",
         "optax",
         "scikit-learn",
