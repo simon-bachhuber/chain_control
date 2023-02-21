@@ -3,8 +3,7 @@ import jax.random as jrand
 import optax
 
 from cc.env import make_env
-from cc.env.collect import sample_feedforward_and_collect
-from cc.env.collect.collect import collect_random_step_source
+from cc.env.collect import random_steps_source, sample_feedforward_and_collect
 from cc.env.wrappers import AddRefSignalRewardFnWrapper
 from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
 from cc.examples.neural_ode_model_compact_example import make_neural_ode_model
@@ -86,7 +85,7 @@ def test_trainer():
     model_trainer.run(1)
     fitted_model = model_trainer.trackers[0].best_model_or_controller()
 
-    source = collect_random_step_source(env, seeds=list(range(1)))
+    source = random_steps_source(env, seeds=list(range(1)))
     env_w_source = AddRefSignalRewardFnWrapper(env, source)
     controller = make_neural_ode_controller(
         env_w_source.observation_spec(),
