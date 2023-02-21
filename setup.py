@@ -47,11 +47,12 @@ setuptools.setup(
         "optax",
         "scikit-learn",
         "ray",
-        "equinox",
+        "equinox==0.9.0",
         "tqdm",
         "ipykernel",
         "ipywidgets",  # otherwise tqdm will warn
         "tree_utils @ git+https://github.com/SimiPixel/tree_utils.git",
+        "myplotlib @ git+https://github.com/SimiPixel/myplotlib.git",
         "imageio[ffmpeg]",
     ],
 )
