@@ -5,12 +5,12 @@ import dm_env
 import numpy as np
 from acme import EnvironmentLoop
 from acme.utils import loggers
-from tqdm.auto import tqdm
+from tqdm.autonotebook import tqdm
 from tree_utils import tree_batch, tree_shape
 
 from ...core import AbstractController
 from ...core.config import use_tqdm
-from ...core.types import BatchedTimeSeriesOfRef, TimeSeriesOfAct
+from ...core.types import TimeSeriesOfAct
 from ...examples.feedforward_controller import make_feedforward_controller
 from ...utils import timestep_array_from_env, to_jax, to_numpy
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
@@ -107,22 +107,6 @@ def sample_feedforward_collect_and_make_source(
     sample = concat_samples(*samples)
     source = ObservationReferenceSource(sample.obs, ts, sample.action)
     return source, sample, tree_batch(loop_results)
-
-
-def collect_random_step_source(
-    env: dm_env.Environment, seeds: list[int], amplitude: float = 3.0
-):
-    ts = timestep_array_from_env(env)
-    yss = np.zeros((len(seeds), len(ts) + 1, 1))
-
-    for i, seed in enumerate(seeds):
-        np.random.seed(seed)
-        yss[i] = np.random.uniform(-amplitude, amplitude)
-
-    _yss = OrderedDict()
-    _yss["xpos_of_segment_end"] = yss
-    _yss = BatchedTimeSeriesOfRef(_yss)
-    return ObservationReferenceSource(_yss, ts=ts)
 
 
 def append_source(
