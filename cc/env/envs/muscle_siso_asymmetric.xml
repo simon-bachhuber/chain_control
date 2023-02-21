@@ -15,8 +15,8 @@
 
 
   <default>
-    <joint type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-120 120" damping="0.1"/>
-    <muscle ctrllimited="false" ctrlrange="0 1"/>
+    <joint type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-120 120" damping="0.02"/>
+    <muscle ctrllimited="true" ctrlrange="0 1"/>
   </default>
 
   <worldbody>
@@ -27,9 +27,9 @@
     <camera name="upperleft" pos="0.792 -1.306 1.560" xyaxes="0.855 0.519 0.000 -0.417 0.687 0.595"/>
 
 
-    <site name="s0" pos="-0.15 0 0" size="0.02"/>
-    <site name="x0" pos="0 -0.15 0" size="0.02" rgba="0 .7 0 1" group="1"/>
-    <site name="x1" pos="0 0.15 0" size="0.02" rgba="0 .7 0 1" group="1"/>
+    <site name="s0" pos="0 0.25 0" size="0.02"/>
+    <site name="x0" pos="-0.1 -0.1 0" size="0.02" rgba="0 .7 0 1" group="1"/>
+    <site name="x1" pos="0.05 0.15 0" size="0.02" rgba="0 .7 0 1" group="1"/>
 
     <body pos="0 0 0" euler="0 0 0">
       <geom name="upper arm" type="capsule" size="0.045" fromto="0 0 0  0.5 0 0" rgba=".5 .1 .1 1"/>

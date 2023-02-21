@@ -37,9 +37,18 @@ class TestTwoSegmentsV3(test_utils.EnvironmentTestMixin, absltest.TestCase):
             yield self.make_action()
 
 
-class TestMuscleSISO(test_utils.EnvironmentTestMixin, absltest.TestCase):
+class TestMuscleCocontraction(test_utils.EnvironmentTestMixin, absltest.TestCase):
     def make_object_under_test(self):
-        return make_env("muscle_siso", random=1)
+        return make_env("muscle_cocontraction", random=1)
+
+    def make_action_sequence(self):
+        for _ in range(LENGTH_ACTION_SEQUENCE):
+            yield self.make_action()
+
+
+class TestMuscleAsymmetric(test_utils.EnvironmentTestMixin, absltest.TestCase):
+    def make_object_under_test(self):
+        return make_env("muscle_asymmetric", random=1)
 
     def make_action_sequence(self):
         for _ in range(LENGTH_ACTION_SEQUENCE):
@@ -108,14 +117,18 @@ def test_no_randomness(env_id):
         ("two_segments_v3", 5.0, 0.01, 501),
         ("two_segments_v3", 10.0, 0.1, 101),
         ("two_segments_v3", 5.0, 0.1, 51),
-        ("muscle_siso", 10.0, 0.01, 1001),
-        ("muscle_siso", 5.0, 0.01, 501),
-        ("muscle_siso", 10.0, 0.1, 101),
-        ("muscle_siso", 5.0, 0.1, 51),
+        ("muscle_cocontraction", 10.0, 0.01, 1001),
+        ("muscle_cocontraction", 5.0, 0.01, 501),
+        ("muscle_cocontraction", 10.0, 0.1, 101),
+        ("muscle_cocontraction", 5.0, 0.1, 51),
         ("rover", 10.0, 0.01, 1001),
         ("rover", 5.0, 0.01, 501),
         ("rover", 10.0, 0.1, 101),
         ("rover", 5.0, 0.1, 51),
+        ("muscle_asymmetric", 10.0, 0.01, 1001),
+        ("muscle_asymmetric", 5.0, 0.01, 501),
+        ("muscle_asymmetric", 10.0, 0.1, 101),
+        ("muscle_asymmetric", 5.0, 0.1, 51),
     ],
 )
 def test_time_limit_control_timestep(env_id, time_limit, control_timestep, n_steps):

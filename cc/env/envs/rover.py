@@ -16,13 +16,13 @@ class Physics(mujoco.Physics):
 
         current_rover_angle = self.get_rover_angle_from_straight_dir_deg()
         if drive >= 0.0:  # Front Wheel Steering Rover
-            if np.abs(current_rover_angle) > 60.0:
+            if np.abs(current_rover_angle) > 75.0:  # 60 degrees
                 u = np.array([0.0])
         else:  # Rear Wheel Steering Rover
             if current_rover_angle >= 30.0:
-                u = np.array([0.5])
+                u = np.array([10.0])
             elif current_rover_angle <= -30.0:
-                u = np.array([-0.5])
+                u = np.array([-10.0])
 
         u = np.tanh(u) * 0.29
 

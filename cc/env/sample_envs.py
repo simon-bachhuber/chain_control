@@ -33,6 +33,7 @@ _id_accessible_envs: Final = {
     "two_segments_v1": TWO_SEGMENT_V1,
     "two_segments_v2": TWO_SEGMENT_V2,
     "two_segments_v3": TWO_SEGMENT_V3,
-    "muscle_siso": EnvConfig(muscle.load_physics, muscle.Task),
+    "muscle_asymmetric": EnvConfig(muscle.load_physics_asymmetric, muscle.Task),
+    "muscle_cocontraction": EnvConfig(muscle.load_physics_cocontraction, muscle.Task),
     "rover": EnvConfig(rover.load_physics, rover.Task_Steering),
 }
