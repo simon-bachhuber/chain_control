@@ -20,6 +20,7 @@ class VideoWrapper(EnvironmentWrapper):
         camera_id: Optional[str] = None,
         width: int = 320,
         height: int = 240,
+        add_uid_to_path: bool = True,
     ):
         """Wraps an Environment and records a video.
 
@@ -45,7 +46,7 @@ class VideoWrapper(EnvironmentWrapper):
         self._record_frame_every = int(control_rate / fps)
         self._env_step = 0
         self._fps = fps
-        self._path = process_path(path, "videos")
+        self._path = process_path(path, "videos", add_uid=add_uid_to_path)
         self._filename = filename
         self._file_extension = (
             file_extension if file_extension[0] == "." else "." + file_extension
