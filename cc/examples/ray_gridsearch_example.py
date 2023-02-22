@@ -23,6 +23,14 @@ def objective(config):
 
 
 ray.init()
+# If you are working on the NHR FAU Cluster, and want to scale
+# your gridsearch across multiple nodes using the `slurm-template.sh`
+# Then you need to call
+# >> import os
+# >> ray.init(address=os.environ.get("ip_head", None))
+# An alternative that also works
+# >> ray.init(address="auto", _redis_password = os.environ["redis_password"])
+# from https://discuss.ray.io/t/ray-on-slurm-unmatched-raylet-address/8509/3
 
 search_space = {
     "x": tune.grid_search([0, 1, 2]),
