@@ -206,7 +206,7 @@ def masterplot_siso(
     env,
     test_source,
     controller,
-    filename: str,
+    filename: str = None,
     extra_sources: list[ExtraSource] = [],
     controller_logs=None,
     controller_tracker_logs=None,
@@ -424,8 +424,9 @@ def masterplot_siso(
     fig.tight_layout(pad=0.33)
     fig.align_labels()
 
-    path_to_folder = process_path(path, experiment_id, "masterplots", add_uid=False)
-    path_figure = os.path.join(path_to_folder, filename)
-    myplotlib.savefig(path_figure, tight=False, transparent=False)
+    if filename is not None:
+        path_to_folder = process_path(path, experiment_id, "masterplots", add_uid=False)
+        path_figure = os.path.join(path_to_folder, filename)
+        myplotlib.savefig(path_figure, tight=False, transparent=False)
 
     return results
