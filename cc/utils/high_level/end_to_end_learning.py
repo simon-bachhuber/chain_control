@@ -27,6 +27,8 @@ from cc.utils.high_level import (
     masterplot_siso,
 )
 
+from .baselines.data import data
+
 
 def make_model(
     env,
@@ -116,7 +118,10 @@ def make_controller(
     seed_controller: int,
     training_step_source_amplitude: float,
     controller_kwargs: dict,
+    optimizer,
     n_steps: int,
+    lambda_l1,
+    lambda_l2,
     noise_scale=None,
 ):
 
@@ -136,10 +141,20 @@ def make_controller(
         tree_transform=tree_transform(training_step_source_amplitude),
     )
 
-    lr = 1e-3
-    optimizer = optax.chain(optax.clip_by_global_norm(1.0), optax.adam(lr))
-
-    regularisers = [Regularisation(1.0, lambda w: {"MSW": jnp.mean(w**2)})]
+    regularisers = (
+        Regularisation(
+            prefactor=lambda_l1,
+            reduce_weights=lambda vector_of_params: {
+                "l1_norm": l1_norm(vector_of_params)
+            },
+        ),
+        Regularisation(
+            prefactor=lambda_l2,
+            reduce_weights=lambda vector_of_params: {
+                "l2_norm": l2_norm(vector_of_params)
+            },
+        ),
+    )
 
     controller_train_options = TrainingOptionsController(
         controller_dataloader,
@@ -159,7 +174,7 @@ def make_controller(
     return controller_trainer
 
 
-data_configs = {"two_segments_v2": {}}
+default_optimizer = optax.chain(optax.clip_by_global_norm(1.0), optax.adam(1e-3))
 
 
 def make_masterplot(
@@ -175,30 +190,23 @@ def make_masterplot(
     seed_controller,
     n_steps_controller,
     noise_scale_controller=None,
-    model_optimizer=optax.chain(optax.clip_by_global_norm(1.0), optax.adam(1e-3)),
+    model_optimizer=default_optimizer,
+    controller_optimizer=default_optimizer,
 ) -> float:
     training_step_source_amplitude = 3.0
     if env_id == "muscle_asymmetric":
         training_step_source_amplitude = np.deg2rad(60.0)
 
-    train_gp = list(range(1))
-    train_cos = [1, 1.5, 2, 3, 3.5, 4, 5, 5.5, 6, 7, 8, 9, 10, 12, 14, 11, 13, 15]
-    val_gp = [15, 16]
-    val_cos = [2.5, 7.5, 10.5, 16]
-    #
-    # train_gp = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    # train_cos = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14]
-    # val_gp = [15, 16, 17, 18]
-    # val_cos = [2.5, 5.0, 7.5, 10.0]
-
-    train_sample = sample_feedforward_and_collect(env, train_gp, train_cos)
-    val_sample = sample_feedforward_and_collect(env, val_gp, val_cos)
+    dc = data[env_id]
+    train_sample = sample_feedforward_and_collect(env, dc["train_gp"], dc["train_cos"])
+    val_sample = sample_feedforward_and_collect(env, dc["val_gp"], dc["val_cos"])
 
     test_source = random_steps_source(
         env, list(range(6)), training_step_source_amplitude
     )
     env_w_source = AddRefSignalRewardFnWrapper(env, test_source)
 
+    lambda_l1_norm = model_kwargs.pop("lambda_l1_norm", 0.0)
     lambda_l2_norm = model_kwargs.pop("lambda_l2_norm", 0.0)
     model_trainer = make_model(
         env,
@@ -207,10 +215,14 @@ def make_masterplot(
         model_kwargs,
         seed_model,
         n_steps_model,
+        lambda_l1_norm,
         lambda_l2_norm,
         model_optimizer,
     )
     model = model_trainer.trackers[0].best_model_or_controller()
+
+    lambda_l1_norm = controller_kwargs.pop("lambda_l1_norm", 0.0)
+    lambda_l2_norm = controller_kwargs.pop("lambda_l2_norm", 0.0)
     controller_trainer = make_controller(
         env,
         env_w_source,
@@ -218,7 +230,10 @@ def make_masterplot(
         seed_controller,
         training_step_source_amplitude,
         controller_kwargs,
+        controller_optimizer,
         n_steps_controller,
+        lambda_l1_norm,
+        lambda_l2_norm,
         noise_scale_controller,
     )
     controller = controller_trainer.trackers[0].best_model_or_controller()

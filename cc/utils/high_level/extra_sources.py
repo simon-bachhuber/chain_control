@@ -11,12 +11,14 @@ from cc.env.loop_observer import AnglesEnvLoopObserver
 
 from .masterplot_siso import ExtraSource, LoopObserverConfig
 
+two_segments = LoopObserverConfig(
+    AnglesEnvLoopObserver(),
+    "sum of angles [deg]",
+    lambda lr, idx: lr["hinge_1 [deg]"][idx] + lr["hinge_2 [deg]"][idx],
+)
 loop_observer_configs = {
-    "two_segments_v2": LoopObserverConfig(
-        AnglesEnvLoopObserver(),
-        "sum of angles [deg]",
-        lambda lr, idx: lr["hinge_1 [deg]"][idx] + lr["hinge_2 [deg]"][idx],
-    ),
+    "two_segments_v2": two_segments,
+    "two_segments": two_segments,
     "rover": None,
     "muscle_asymmetric": None,
 }
@@ -24,7 +26,7 @@ loop_observer_configs = {
 
 def build_extra_sources(env_id: str, record_video):
 
-    if env_id == "two_segments_v2":
+    if env_id == "two_segments_v2" or "two_segments":
         camera_id = "skyview"
         high_amp = 6.0
         step_amp = 2.0
