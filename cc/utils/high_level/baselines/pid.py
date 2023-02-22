@@ -10,4 +10,5 @@ best_pd = {
     make_env("muscle_asymmetric", physics_kwargs={"corner": 0.03}): {
         "PD": {"P": 0.026084, "D": 0.005709}
     },
+    make_env("two_segments_v2"): {"PD": {"P": 0.08, "D": 0.08}},
 }
