@@ -5,5 +5,5 @@ from .abstract import (
     AbstractModel,
     AbstractObservationReferenceSource,
 )
-from .save_load import load, save
+from .save_load import load, load_eqx, save, save_eqx
 from .types import PRNGKey
