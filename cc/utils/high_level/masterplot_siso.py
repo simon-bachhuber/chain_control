@@ -11,7 +11,7 @@ from acme.utils.paths import process_path
 
 from cc.env.collect import collect_exhaust_source
 from cc.env.collect.source import ObservationReferenceSource
-from cc.env.loop_observer import EnvLoopObserver
+from cc.env.loop_observer import DenoisifyObserver, EnvLoopObserver
 from cc.env.wrappers import (
     AddRefSignalRewardFnWrapper,
     ReplacePhysicsByModelWrapper,
@@ -107,15 +107,28 @@ def _eval_controller_1(
     loop_observer_config_xy=None,
     loop_observer_config: Optional[LoopObserverConfig] = None,
     rmse_center_right: bool = False,
+    plot_noise: bool = True,
+    mae: bool = False,
+    fill_between: bool = False,
+    fill_between_kwargs={},
 ):
     ts = timestep_array_from_env(env)
+
+    observers = [DenoisifyObserver()]
+    if loop_observer_config:
+        observers.append(loop_observer_config.loop_observer)
 
     env_w_source = AddRefSignalRewardFnWrapper(env, source)
     sample, loop_results = collect_exhaust_source(
         env_w_source,
         controller,
-        [loop_observer_config.loop_observer] if loop_observer_config else (),
+        observers,
     )
+
+    if plot_noise:
+        obs = sample.obs["obs"]
+    else:
+        obs = loop_results["no_noise_obs"]
 
     model_or_env = "Environment"
     if isinstance(env, ReplacePhysicsByModelWrapper):
@@ -142,7 +155,7 @@ def _eval_controller_1(
             )
             (line_obs,) = ax.plot(
                 ts,
-                obs_take(sample.obs["obs"], idx),
+                obs_take(obs, idx),
                 linestyle="--",
                 color=legend_color,
                 label=f"Output in {model_or_env}",
@@ -151,10 +164,18 @@ def _eval_controller_1(
         ax.plot(ts, obs_take(sample.obs["ref"], idx), color=color)
         ax.plot(
             ts,
-            obs_take(sample.obs["obs"], idx),
+            obs_take(obs, idx),
             linestyle="--",
             color=color,
         )
+
+        if fill_between:
+            ax.fill_between(
+                ts,
+                obs_take(sample.obs["ref"], idx),
+                obs_take(obs, idx),
+                **fill_between_kwargs,
+            )
 
         if loop_observer_config is not None:
             # left-right, top-bottom, width, heigt
@@ -166,22 +187,34 @@ def _eval_controller_1(
                 dashes=(5, 1),
             )
 
-    RMSE = np.sqrt(np.mean(-sample.rew))
+    if mae:
+        error = np.mean(np.sqrt(-sample.rew))
+        label = "MAE"
+    else:
+        error = np.sqrt(np.mean(-sample.rew))
+        label = "RMSE"
+
     mse_x, mse_y = 0.05, 0.95
     if rmse_center_right:
         mse_x, mse_y = 0.7, 0.45
+
+    kwargs = {}
+    if "color" in fill_between_kwargs:
+        kwargs["color"] = fill_between_kwargs["color"]
+
     ax.text(
         mse_x,
         mse_y,
-        "RMSE: {:10.4f}".format(RMSE),
+        "{}: {:10.4f}".format(label, error),
         transform=ax.transAxes,
         weight="bold",
+        **kwargs,
     )
 
     # Create boxed legend
     ax.legend(handles=[line_ref, line_obs], loc="upper right")
 
-    return RMSE
+    return {label: error}
 
 
 def _eval_controller_2(ax, title: str, ylim: tuple[float] = None, ylabel=None):
@@ -220,12 +253,14 @@ def masterplot_siso(
     path: str = "~/chain_control",
     experiment_id: str = "",
     loop_observer_config=None,
+    plot_noise_extras: bool = False,
+    use_mae: bool = False,
 ):
     results = {}
     ylabel = key_of_obs(env.observation_spec())
     ts = timestep_array_from_env(env)
 
-    fig = plt.figure(figsize=myplotlib.set_size_dl(1.5, 3.0))
+    fig = plt.figure(figsize=myplotlib.figsize(1.5, 0.5))
     ax11 = plt.subplot(521)
     ax12 = plt.subplot(522)
     ax21 = plt.subplot(523)
@@ -370,13 +405,19 @@ def masterplot_siso(
     # PLOT [2,0] ####
     if model:
         env_model = ReplacePhysicsByModelWrapper(env, model)
-        rmse = _eval_controller_1(axes[2, 0], env_model, test_source, controller)
-        results["train_rmse_controller"] = rmse
+        label_and_error = _eval_controller_1(
+            axes[2, 0], env_model, test_source, controller, mae=use_mae
+        )
+        label = [key for key in label_and_error][0]
+        results[f"train_{label.lower()}_controller"] = label_and_error[label]
     _eval_controller_2(axes[2, 0], "Training References (Model)", ylabel=ylabel)
 
     # PLOT [2,1] ####
-    rmse = _eval_controller_1(axes[2, 1], env, test_source, controller)
-    results["test_rmse_controller"] = rmse
+    label_and_error = _eval_controller_1(
+        axes[2, 1], env, test_source, controller, plot_noise=True, mae=use_mae
+    )
+    label = [key for key in label_and_error][0]
+    results[f"test_{label.lower()}_controller"] = label_and_error[label]
     _eval_controller_2(axes[2, 1], "Training References (Simulation)", ylabel=ylabel)
 
     ANLGE_SUBPLOT_X_ANCHOR = 0.12
@@ -402,7 +443,7 @@ def masterplot_siso(
             ANLGE_SUBPLOT_Y_ANCHOR + i * ANGLE_SUBPLOT_Y_DELTA,
         )
         ax = axes[i + 3, j]
-        rmse = _eval_controller_1(
+        label_and_error = _eval_controller_1(
             ax,
             env_video if env_video else env,
             extra.source,
@@ -410,9 +451,11 @@ def masterplot_siso(
             xy,
             loop_observer_config,
             True,
+            plot_noise=plot_noise_extras,
+            mae=use_mae,
         )
-
-        results[extra.name] = rmse
+        label = [key for key in label_and_error][0]
+        results[extra.name + "_" + label.lower()] = label_and_error[label]
         _eval_controller_2(ax, extra.name, ylabel=ylabel)
 
         # Background color for test plots

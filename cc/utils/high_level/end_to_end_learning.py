@@ -1,84 +1,74 @@
+import os
+
 import jax
 import jax.numpy as jnp
 import jax.random as jrand
-import numpy as np
 import optax
+from acme.utils.paths import process_path
 
-from cc.env.collect import random_steps_source, sample_feedforward_and_collect
-from cc.env.wrappers import AddRefSignalRewardFnWrapper
+from cc.core import save_eqx
+from cc.env.collect import random_steps_source
 from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
 from cc.examples.neural_ode_model_compact_example import make_neural_ode_model
 from cc.train import (
     DictLogger,
     EvaluationMetrices,
     ModelControllerTrainer,
-    Regularisation,
     SupervisedDataset,
     Tracker,
     TrainingOptionsController,
     TrainingOptionsModel,
     UnsupervisedDataset,
+    l1_l2_regularisers,
     make_dataloader,
 )
-from cc.utils import l1_norm, l2_norm, rmse
+from cc.utils import rmse, split_filename
 from cc.utils.high_level import (
     build_extra_sources,
     loop_observer_configs,
     masterplot_siso,
 )
 
-from .baselines.data import data
+from .defaults import Env
 
 
 def make_model(
     env,
-    sample_train,
-    sample_val,
+    train_sample,
+    val_sample,
     model_kwargs: dict,
-    seed_model: int,
     n_steps: int,
-    lambda_l1_norm: float = 0.0,
-    lambda_l2_norm: float = 0.0,
-    optimizer=optax.chain(optax.clip_by_global_norm(1.0), optax.adam(1e-3)),
+    lambda_l1: float,
+    lambda_l2: float,
+    optimizer,
+    seed,
 ):
     model = make_neural_ode_model(
         env.action_spec(),
         env.observation_spec(),
         env.control_timestep(),
-        key=jrand.PRNGKey(seed_model),
+        key=jrand.PRNGKey(seed),
         **model_kwargs,
     )
 
     model_train_dataloader = make_dataloader(
-        SupervisedDataset(sample_train.action, sample_train.obs),  # <- (X, y)
+        SupervisedDataset(train_sample.action, train_sample.obs),  # <- (X, y)
         n_minibatches=4,
         do_bootstrapping=True,
     )
 
-    regularisers = (
-        Regularisation(
-            prefactor=lambda_l1_norm,
-            reduce_weights=lambda vector_of_params: {
-                "l1_norm": l1_norm(vector_of_params)
-            },
-        ),
-        Regularisation(
-            prefactor=lambda_l2_norm,
-            reduce_weights=lambda vector_of_params: {
-                "l2_norm": l2_norm(vector_of_params)
-            },
-        ),
-    )
-
     metrices = (
         EvaluationMetrices(
-            data=(sample_val.action, sample_val.obs),  # <- (X, y)
+            data=(val_sample.action, val_sample.obs),  # <- (X, y)
             metrices=(lambda y, yhat: {"val_rmse": rmse(y, yhat)},),
         ),
     )
 
     model_train_options = TrainingOptionsModel(
-        model_train_dataloader, optimizer, regularisers=regularisers, metrices=metrices
+        model_train_dataloader,
+        optimizer,
+        regularisers=l1_l2_regularisers(lambda_l1, lambda_l2),
+        metrices=metrices,
     )
 
     model_trainer = ModelControllerTrainer(
@@ -115,23 +105,27 @@ def make_controller(
     env,
     env_w_source,
     model,
-    seed_controller: int,
     training_step_source_amplitude: float,
     controller_kwargs: dict,
     optimizer,
     n_steps: int,
     lambda_l1,
     lambda_l2,
-    noise_scale=None,
+    noise_scale,
+    seed,
 ):
 
-    controller = make_neural_ode_controller(
-        env_w_source.observation_spec(),
-        env_w_source.action_spec(),
-        env_w_source.control_timestep(),
-        key=jrand.PRNGKey(seed_controller),
+    obs_spec = env_w_source.observation_spec()
+    act_spec = env_w_source.action_spec()
+    control_timestep = env_w_source.control_timestep()
+    init_fn = lambda: make_neural_ode_controller(
+        obs_spec,
+        act_spec,
+        control_timestep,
+        key=jrand.PRNGKey(seed),
         **controller_kwargs,
     )
+    controller = init_fn()
 
     controller_dataloader = make_dataloader(
         UnsupervisedDataset(
@@ -141,25 +135,10 @@ def make_controller(
         tree_transform=tree_transform(training_step_source_amplitude),
     )
 
-    regularisers = (
-        Regularisation(
-            prefactor=lambda_l1,
-            reduce_weights=lambda vector_of_params: {
-                "l1_norm": l1_norm(vector_of_params)
-            },
-        ),
-        Regularisation(
-            prefactor=lambda_l2,
-            reduce_weights=lambda vector_of_params: {
-                "l2_norm": l2_norm(vector_of_params)
-            },
-        ),
-    )
-
     controller_train_options = TrainingOptionsController(
         controller_dataloader,
         optimizer,
-        regularisers=regularisers,
+        regularisers=l1_l2_regularisers(lambda_l1, lambda_l2),
         noise_scale=noise_scale,
     )
     controller_trainer = ModelControllerTrainer(
@@ -171,90 +150,95 @@ def make_controller(
     )
     controller_trainer.run(n_steps)
 
-    return controller_trainer
+    return controller_trainer, init_fn
 
 
 default_optimizer = optax.chain(optax.clip_by_global_norm(1.0), optax.adam(1e-3))
 
 
 def make_masterplot(
-    env_id,
-    env,
-    filename,
-    record_video,
-    experiment_id,
-    model_kwargs,
-    seed_model,
-    n_steps_model,
-    controller_kwargs,
-    seed_controller,
-    n_steps_controller,
-    noise_scale_controller=None,
+    env: Env,
+    filename=None,
+    record_video=False,
+    path: str = "~/chain_control",
+    experiment_id="",
+    model_kwargs={},
+    model_n_steps: int = 700,
     model_optimizer=default_optimizer,
+    model_l1: float = 0.0,
+    model_l2: float = 0.0,
+    model_seed: int = 1,
+    controller_kwargs={},
+    controller_n_steps: int = 700,
     controller_optimizer=default_optimizer,
+    controller_l1: float = 0.0,
+    controller_l2: float = 0.0,
+    controller_seed: int = 1,
+    controller_noise_scale=None,
+    controller_training_step_ampl: float = 3.0,
+    dump_controller: bool = False,
+    controller_use_tracker: bool = True,
 ) -> float:
-    training_step_source_amplitude = 3.0
-    if env_id == "muscle_asymmetric":
-        training_step_source_amplitude = np.deg2rad(60.0)
 
-    dc = data[env_id]
-    train_sample = sample_feedforward_and_collect(env, dc["train_gp"], dc["train_cos"])
-    val_sample = sample_feedforward_and_collect(env, dc["val_gp"], dc["val_cos"])
+    train_sample = env.train_sample
+    val_sample = env.val_sample
 
-    test_source = random_steps_source(
-        env, list(range(6)), training_step_source_amplitude
-    )
-    env_w_source = AddRefSignalRewardFnWrapper(env, test_source)
-
-    lambda_l1_norm = model_kwargs.pop("lambda_l1_norm", 0.0)
-    lambda_l2_norm = model_kwargs.pop("lambda_l2_norm", 0.0)
     model_trainer = make_model(
-        env,
+        env.env,
         train_sample,
         val_sample,
         model_kwargs,
-        seed_model,
-        n_steps_model,
-        lambda_l1_norm,
-        lambda_l2_norm,
+        model_n_steps,
+        model_l1,
+        model_l2,
         model_optimizer,
+        model_seed,
     )
     model = model_trainer.trackers[0].best_model_or_controller()
 
-    lambda_l1_norm = controller_kwargs.pop("lambda_l1_norm", 0.0)
-    lambda_l2_norm = controller_kwargs.pop("lambda_l2_norm", 0.0)
-    controller_trainer = make_controller(
-        env,
-        env_w_source,
+    controller_trainer, init_fn = make_controller(
+        env.env,
+        env.env_w_source,
         model,
-        seed_controller,
-        training_step_source_amplitude,
+        controller_training_step_ampl,
         controller_kwargs,
         controller_optimizer,
-        n_steps_controller,
-        lambda_l1_norm,
-        lambda_l2_norm,
-        noise_scale_controller,
+        controller_n_steps,
+        controller_l1,
+        controller_l2,
+        controller_noise_scale,
+        controller_seed,
     )
-    controller = controller_trainer.trackers[0].best_model_or_controller()
+    if controller_use_tracker:
+        controller = controller_trainer.trackers[0].best_model_or_controller()
+    else:
+        controller = controller_trainer._controller
 
     results = masterplot_siso(
-        env,
-        test_source,
+        env.env,
+        env.test_source,
         controller,
         filename,
-        build_extra_sources(env_id, record_video),
+        build_extra_sources(env.env_id, record_video),
         controller_trainer.get_logs()[0],
         controller_trainer.get_tracker_logs()[0],
         model,
         model_trainer.get_logs()[0],
         model_trainer.get_tracker_logs()[0],
         train_sample,
-        [0, 1, 4, 5],
+        [0, 1, 2, 3],
         val_sample,
-        [0, 2, 3],
+        [0, 2, 4, 5],
+        path=path,
         experiment_id=experiment_id,
-        loop_observer_config=loop_observer_configs[env_id],
+        loop_observer_config=loop_observer_configs[env.env_id],
     )
+
+    if dump_controller:
+        path_folder = process_path(
+            path, experiment_id, "fitted_controllers", add_uid=False
+        )
+        path_controller = os.path.join(path_folder, split_filename(filename)[0])
+        save_eqx(path_controller, controller, init_fn)
 
     return results
