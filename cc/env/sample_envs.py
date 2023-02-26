@@ -1,6 +1,6 @@
 from typing import Final
 
-from .envs import muscle, rover, two_segments
+from .envs import ackermann, muscle, rover, two_segments
 from .envs.two_segments import CartParams, JointParams, generate_env_config
 from .make_env import EnvConfig
 
@@ -53,4 +53,5 @@ _id_accessible_envs: Final = {
     "muscle_asymmetric": EnvConfig(muscle.load_physics_asymmetric, muscle.Task),
     "muscle_cocontraction": EnvConfig(muscle.load_physics_cocontraction, muscle.Task),
     "rover": EnvConfig(rover.load_physics, rover.Task_Steering),
+    "ackermann": EnvConfig(ackermann.Physics, ackermann.Task),
 }

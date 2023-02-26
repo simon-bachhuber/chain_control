@@ -8,25 +8,35 @@ from cc.env.collect import (
     sample_feedforward_collect_and_make_source,
 )
 from cc.env.loop_observer import AnglesEnvLoopObserver
+from cc.env.loop_observer.ackermann_phi_observer import AckermannPhiObserver
 
 from .masterplot_siso import ExtraSource, LoopObserverConfig
 
 two_segments = LoopObserverConfig(
     AnglesEnvLoopObserver(),
-    "sum of angles [deg]",
+    "Pendulum Angle [deg]",
     lambda lr, idx: lr["hinge_1 [deg]"][idx] + lr["hinge_2 [deg]"][idx],
 )
+ackermann = LoopObserverConfig(
+    AckermannPhiObserver(), "Car Angle [deg]", lambda lr, idx: lr["phi [deg]"][idx]
+)
+
 loop_observer_configs = {
     "two_segments_v2": two_segments,
     "two_segments": two_segments,
     "rover": None,
     "muscle_asymmetric": None,
+    "ackermann": ackermann,
 }
 
 
 def build_extra_sources(env_id: str, record_video):
 
     if env_id == "two_segments_v2" or "two_segments":
+        camera_id = "skyview"
+        high_amp = 6.0
+        step_amp = 2.0
+    elif env_id == "ackermann":
         camera_id = "skyview"
         high_amp = 6.0
         step_amp = 2.0
