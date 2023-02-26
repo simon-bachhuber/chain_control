@@ -13,6 +13,7 @@ from .step_fn import (
     Regularisation,
     TrainingOptionsController,
     TrainingOptionsModel,
+    l1_l2_regularisers,
     make_step_fn_controller,
     make_step_fn_model,
 )
