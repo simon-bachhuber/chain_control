@@ -12,7 +12,7 @@ from tree_utils import PyTree, batch_concat, tree_batch
 
 from ..core import AbstractController, AbstractModel
 from ..core.module_utils import flatten_module
-from ..utils import mse
+from ..utils import l1_norm, l2_norm, mse
 from .minibatch import (
     Dataloader,
     MiniBatchState,
@@ -61,6 +61,23 @@ class EvaluationMetrices:
 class Regularisation:
     prefactor: float
     reduce_weights: REGU_FN
+
+
+def l1_l2_regularisers(lambda_l1, lambda_l2):
+    return (
+        Regularisation(
+            prefactor=lambda_l1,
+            reduce_weights=lambda vector_of_params: {
+                "l1_norm": l1_norm(vector_of_params)
+            },
+        ),
+        Regularisation(
+            prefactor=lambda_l2,
+            reduce_weights=lambda vector_of_params: {
+                "l2_norm": l2_norm(vector_of_params)
+            },
+        ),
+    )
 
 
 @dataclass
