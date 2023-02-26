@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import numpy as np
@@ -77,3 +79,24 @@ def primes(n: int) -> list[int]:
     if n > 1:
         primfac.append(n)
     return primfac
+
+
+def split_filename(filename: str):
+    splits = filename.split(".")
+    if len(splits) == 1:
+        return filename, None
+    elif len(splits) == 2:
+        return splits[0], splits[1]
+    else:
+        raise Exception(f"Extension could not be uniquely inferred from {filename}")
+
+
+def default_dict():
+    return defaultdict(lambda: default_dict())
+
+
+def default_dict_to_dict(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            d[k] = default_dict_to_dict(v)
+    return dict(d)
