@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 import optax
 
@@ -52,6 +53,7 @@ class Env:
     task_kwargs: dict
     physics_kwargs: dict
     noise_level: float = 0.0
+    data: Optional[dict] = None
 
     @property
     def env(self):
@@ -68,15 +70,17 @@ class Env:
 
     @property
     def train_sample(self):
+        data_config = self.data if self.data else data[self.env_id]
         sample = sample_feedforward_and_collect(
-            self.env, data[self.env_id]["train_gp"], data[self.env_id]["train_cos"]
+            self.env, data_config["train_gp"], data_config["train_cos"]
         )
         return sample
 
     @property
     def val_sample(self):
+        data_config = self.data if self.data else data[self.env_id]
         sample = sample_feedforward_and_collect(
-            self.env, data[self.env_id]["val_gp"], data[self.env_id]["val_cos"]
+            self.env, data_config["val_gp"], data_config["val_cos"]
         )
         return sample
 
