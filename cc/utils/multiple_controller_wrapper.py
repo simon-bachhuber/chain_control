@@ -1,6 +1,7 @@
 import jax.numpy as jnp
 
 from cc.core import AbstractController
+from cc.train.step_fn import merge_x_y
 
 
 class MultipleControllerWrapper(AbstractController):
@@ -8,15 +9,14 @@ class MultipleControllerWrapper(AbstractController):
 
     def __init__(self, *controllers):
         self.controllers = tuple(
-            *controllers
+            controllers
         )  # pytype complains cause `controllers` is generator
 
     def step(self, x):
+        # TODO
+        # Dangerous `OrderedDict` Logic
         actions = [
-            {
-                "obs": {"xpos_of_segment_end": s_obs},
-                "ref": {"xpos_of_segment_end": s_ref},
-            }
+            merge_x_y({"xpos_of_segment_end": s_ref}, {"xpos_of_segment_end": s_obs})
             for s_obs, s_ref in zip(
                 x["obs"]["xpos_of_segment_end"], x["ref"]["xpos_of_segment_end"]
             )
