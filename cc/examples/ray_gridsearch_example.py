@@ -60,3 +60,10 @@ ray.shutdown()
 # >> tune.ExperimentAnalysis(`objective_dir`).dataframe().to_pickle("./results.pkl")
 # Then transfer the `results.pkl` to your local machine and use
 # >> pd.read_pickle("results.pkl")
+
+# ----------------
+# Q: How to handle trials that error due to memory pressure?
+# A: The easiest way is to simply restore the gridsearch sweep but only re-run
+#    all trials that errored (or that haven't run yet)
+#    This can be done with
+#    >> tune.Tuner.restore(`path_to_objective_dir`, restart_errored=True).fit()
