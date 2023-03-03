@@ -17,23 +17,14 @@
     <light name="light" pos="0 0 36"/>
     
     <camera name="skyview" pos="0 -20 18" euler="50 0 0"/>
+    <camera name="skyview2" pos="0 -11 6" euler="65 0 0"/>
     <!-- Cameras -->
     
     <geom name="floor" pos="0 0 -.25" size="100 100 .2" type="plane" material="grid"/>
     <geom name="rail1" type="capsule" pos="0  .07 2" zaxis="1 0 0" size="0.02 20" material="decoration" />
     <geom name="rail2" type="capsule" pos="0 -.07 2" zaxis="1 0 0" size="0.02 20" material="decoration" />
 
-    <geom name="x-marker1" type="box" pos="-10 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker2" type="box" pos="-8 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker3" type="box" pos="-6 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker4" type="box" pos="-4 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker5" type="box" pos="-2 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker6" type="box" pos="0 0 3" size="0.1 0.2 0.2" material="self_highlight" />
-    <geom name="x-marker7" type="box" pos="2 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker8" type="box" pos="4 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker9" type="box" pos="6 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker10" type="box" pos="8 0 3" size="0.1 0.2 0.2" material="self" />
-    <geom name="x-marker11" type="box" pos="10 0 3" size="0.1 0.2 0.2" material="self" />
+    <!-- Markers -->
 
     <!-- Bodies -->
   </worldbody>
