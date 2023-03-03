@@ -32,8 +32,17 @@ Check out the introductory notebooks located under `/docs` and the examples unde
 
 ## Bugfixes
 
+---
     Bug: "Mujoco-Lib could not be found"
     Solution: Re-install `dm_control`
     Steps:
-        - pip uninstall dm_control
-        - pip install dm_control
+        - pip install --upgrade dm_control
+
+---
+
+    Bug: "python_*.so could not be found"
+    Solution: `LD_LIBRARY_PATH` Environment Variable is incorrectly set.
+    Steps: 
+        Let `chain_control` be the name of your conda-env, and `simon` the username.
+        - Add to `.bashrc`
+            `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/simon/miniforge3/envs/chain_control/lib`
