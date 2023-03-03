@@ -1,3 +1,93 @@
+## Two Segments
+
+### damping = 0.015, stiffness=1.5
+
+```python
+df.sort_values("_metric").head(30)[['_metric', 'config/clip',
+'config/f_depth', 'config/f_final_activation', 'config/f_width_size',
+'config/global_clip', 'config/lambda_l1', 'config/lambda_l2',
+'config/lr', 'config/state_dim']]
+## OUTPUT
+       _metric  config/clip  config/f_depth              config/f_final_activation  config/f_width_size  config/global_clip  config/lambda_l1  config/lambda_l2  config/lr  config/state_dim
+2230  0.909768         0.05               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.05              0.00              0.00      0.001                50
+2231  0.909768         0.50               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.05              0.00              0.00      0.001                50
+2362  0.911060         0.05               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.50              0.00              0.02      0.001                50
+2242  0.911770         0.05               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.50              0.00              0.00      0.001                50
+2243  0.915970         0.50               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.50              0.00              0.00      0.001                50
+2351  0.919145         0.50               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.05              0.00              0.02      0.001                50
+2350  0.919145         0.05               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.05              0.00              0.02      0.001                50
+2260  0.922663         0.05               0                         <PjitFunction>                   25                0.05              0.02              0.00      0.001                50
+2261  0.922663         0.50               0                         <PjitFunction>                   25                0.05              0.02              0.00      0.001                50
+2273  0.922747         0.50               0                         <PjitFunction>                   25                0.50              0.02              0.00      0.001                50
+2363  0.923270         0.50               0  <function <lambda> at 0x14577ca7c5e0>                   25                0.50              0.00              0.02      0.001                50
+2272  0.923798         0.05               0                         <PjitFunction>                   25                0.50              0.02              0.00      0.001                50
+2393  0.924323         0.50               0                         <PjitFunction>                   25                0.50              0.02              0.02      0.001                50
+2381  0.924405         0.50               0                         <PjitFunction>                   25                0.05              0.02              0.02      0.001                50
+2380  0.924405         0.05               0                         <PjitFunction>                   25                0.05              0.02              0.02      0.001                50
+2284  0.930548         0.05               0                         <PjitFunction>                   25                0.05              0.10              0.00      0.001                50
+2285  0.930548         0.50               0                         <PjitFunction>                   25                0.05              0.10              0.00      0.001                50
+2514  0.931195         0.50               0                         <PjitFunction>                   25                0.05              0.10              0.10      0.001                50
+2496  0.931743         0.05               0                         <PjitFunction>                   25                0.05              0.02              0.10      0.001                50
+2497  0.931743         0.50               0                         <PjitFunction>                   25                0.05              0.02              0.10      0.001                50
+2296  0.932167         0.05               0                         <PjitFunction>                   25                0.50              0.10              0.00      0.001                50
+2392  0.932376         0.05               0                         <PjitFunction>                   25                0.50              0.02              0.02      0.001                50
+2297  0.933260         0.50               0                         <PjitFunction>                   25                0.50              0.10              0.00      0.001                50
+2526  0.934140         0.50               0                         <PjitFunction>                   25                0.50              0.10              0.10      0.001                50
+2506  0.934468         0.50               0                         <PjitFunction>                   25                0.50              0.02              0.10      0.001                50
+2416  0.936025         0.50               0                         <PjitFunction>                   25                0.50              0.10              0.02      0.001                50
+2525  0.938226         0.05               0                         <PjitFunction>                   25                0.50              0.10              0.10      0.001                50
+2505  0.940068         0.05               0                         <PjitFunction>                   25                0.50              0.02              0.10      0.001                50
+2415  0.940298         0.05               0                         <PjitFunction>                   25                0.50              0.10              0.02      0.001                50
+2596  0.941720         0.05               0                         <PjitFunction>                   25                0.05              0.02              0.20      0.001                50
+
+## Actually we can get
+import jax.numpy as jnp
+import jax
+import optax 
+
+def optimizer_rover(lr, clip, global_clip):
+    optimizer = optax.chain(
+        optax.clip_by_global_norm(global_clip),
+        optax.clip(clip),
+        optax.adam(lr),
+    )
+    return optimizer
+
+env_id = "two_segments"
+damping = 1.5*1e-2
+stiffness=1.5
+env = make_env(env_id, physics_kwargs={"damping": damping, "stiffness": stiffness})
+
+make_masterplot(env_id, env, f"{env_id}_damp_{damping}_stiff_{stiffness}_trained.pdf", True, "trained", 
+    {"state_dim": 75, "f_depth": 0, "f_width_size": 25, "u_transform": jnp.arctan}, 
+    3, 700, {"state_dim": 40, "f_depth": 0}, 1, 1000, model_optimizer=optimizer_rover(0.01, 0.05, 0.05))
+
+## OUTPUT
+{'training_rmse_model': DeviceArray(0.66859454, dtype=float32),
+ 'test_rmse_model': DeviceArray(0.52103347, dtype=float32),
+ 'train_rmse_controller': 0.44505924,
+ 'test_rmse_controller': 0.6867308,
+ 'high_amplitude': 2.464438,
+ 'double_steps': 1.2279183,
+ 'smooth_refs': 1.9372492,
+ 'smooth_to_constant_refs': 1.4096903}
+
+## OR
+
+make_masterplot(env_id, env, f"{env_id}_damp_{damping}_stiff_{stiffness}_trained.pdf", True, "trained", 
+    {"state_dim": 75, "f_depth": 0, "f_width_size": 25, "u_transform": jnp.arctan}, 
+    3, 700, {"state_dim": 40, "f_depth": 0}, 1, 1000, model_optimizer=optimizer_rover(0.01, 0.05, 0.05))
+
+{'training_rmse_model': DeviceArray(0.6174759, dtype=float32),
+ 'test_rmse_model': DeviceArray(0.511267, dtype=float32),
+ 'train_rmse_controller': 0.42773965,
+ 'test_rmse_controller': 0.6851262,
+ 'high_amplitude': 2.4503672,
+ 'double_steps': 1.2375759,
+ 'smooth_refs': 1.8456837,
+ 'smooth_to_constant_refs': 1.3312474}
+```
+
 ## Rover
 
 The run that created these runs was defined by 
