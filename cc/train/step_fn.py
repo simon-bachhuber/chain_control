@@ -178,6 +178,7 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
 
 
 def merge_x_y(x, y):
+    """ref, obs"""
     d = OrderedDict()
     d["ref"] = x
     d["obs"] = y
