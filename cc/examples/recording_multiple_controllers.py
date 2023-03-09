@@ -1,7 +1,8 @@
 import equinox as eqx
 from cc.env import make_env_from_config
 from cc.env.collect import sample_feedforward_collect_and_make_source
-from cc.env.envs.two_segments import CartParams, JointParams, generate_duplicate_env_config
+from cc.env.collect.circus import double_step_source
+from cc.env.envs.two_segments import CartParams, Color, JointParams, Marker, generate_duplicate_env_config
 from cc.env.sample_envs import TWO_SEGMENT_V1
 from cc.env.wrappers import VideoWrapper
 from cc.env.wrappers.add_reference_and_reward import AddRefSignalRewardFnWrapper
@@ -56,10 +57,14 @@ video_env_config = generate_duplicate_env_config(
         ),
     ),
     2,
+    marker_params=[
+        Marker(pos=3, material=Color.RED),
+        Marker(pos=6, material=Color.PINK),
+    ]
 )
 
 video_env = make_env_from_config(video_env_config, time_limit=10.0, control_timestep=0.01)
-video_source, _, _ = sample_feedforward_collect_and_make_source(video_env, seeds=[100])
+video_source = double_step_source(video_env, 3)
 video_env_w_source = AddRefSignalRewardFnWrapper(video_env, video_source)
 
 
