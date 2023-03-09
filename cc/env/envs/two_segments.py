@@ -106,7 +106,7 @@ def generate_marker(
     Generates a marker.
     """
     return rf"""
-        <geom name="x-marker-generated{name}" priority="1" type="box" pos="{pos} 0 3" size="0.1 0.2 0.2" material={material.value}" />
+        <geom name="x-marker-generated{name}" priority="1" type="box" pos="{pos} 0 3" size="0.1 0.2 0.2" material="{material.value}" />
     """.encode()
 
 
