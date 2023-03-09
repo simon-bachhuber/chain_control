@@ -40,21 +40,17 @@ controller2 = make_neural_ode_controller(
 )
 
 # Replace this with your controllers
-controller_e1 = eqx.tree_deserialise_leaves(
+controller1 = eqx.tree_deserialise_leaves(
     f"controller1.eqx", controller1)
-controller_e2 = eqx.tree_deserialise_leaves(
-    f"controller4.eqx", controller2)
-
-
+controller2 = eqx.tree_deserialise_leaves(
+    f"controller2.eqx", controller2)
 
 
 video_env_config = generate_duplicate_env_config(
     CartParams(
         name="cart",
         slider_joint_params=JointParams(damping=1e-3),
-        hinge_joint_params=JointParams(
-            damping=1e-1, springref=0, stiffness=10
-        ),
+        hinge_joint_params=JointParams(damping=1e-1, springref=0, stiffness=10),
     ),
     2,
     marker_params=[
@@ -66,7 +62,6 @@ video_env_config = generate_duplicate_env_config(
 video_env = make_env_from_config(video_env_config, time_limit=10.0, control_timestep=0.01)
 video_source = double_step_source(video_env, 3)
 video_env_w_source = AddRefSignalRewardFnWrapper(video_env, video_source)
-
 
 
 wrapper = MultipleControllerWrapper(controller1, controller2)
