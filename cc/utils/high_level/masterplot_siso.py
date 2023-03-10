@@ -44,12 +44,10 @@ class LoopObserverConfig:
 
 
 def _eval_model_1(ax, sample, ts, model, indices):
-
     m = eqx.filter_vmap(model.unroll)
 
     start_idx = indices[0]
     for idx, color in zip(indices, colors):
-
         obs_hat = m(sample.action)
         m_rmse = rmse(sample.obs, obs_hat)
 
@@ -239,7 +237,7 @@ def masterplot_siso(
     env,
     test_source,
     controller,
-    filename: str = None,
+    filename: Optional[str] = None,
     extra_sources: list[ExtraSource] = [],
     controller_logs=None,
     controller_tracker_logs=None,
@@ -426,7 +424,6 @@ def masterplot_siso(
     ANGLE_SUBPLOT_Y_DELTA = -0.2
 
     for i, j, extra in zip([0, 0, 1, 1], [0, 1, 0, 1], extra_sources):
-
         env_video = None
         if extra.record_video:
             path_video = os.path.join(path, experiment_id)

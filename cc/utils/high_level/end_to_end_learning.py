@@ -84,7 +84,6 @@ def make_model(
 
 
 def tree_transform(bound: float = 3.0):
-
     upper_bound = bound
     lower_bound = -bound
 
@@ -114,7 +113,6 @@ def make_controller(
     noise_scale,
     seed,
 ):
-
     obs_spec = env_w_source.observation_spec()
     act_spec = env_w_source.action_spec()
     control_timestep = env_w_source.control_timestep()
@@ -179,7 +177,6 @@ def make_masterplot(
     dump_controller: bool = False,
     controller_use_tracker: bool = True,
 ) -> float:
-
     train_sample = env.train_sample
     val_sample = env.val_sample
 

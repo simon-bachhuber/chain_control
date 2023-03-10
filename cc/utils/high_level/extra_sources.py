@@ -31,7 +31,6 @@ loop_observer_configs = {
 
 
 def build_extra_sources(env_id: str, record_video):
-
     if env_id == "two_segments_v2" or "two_segments":
         camera_id = "skyview"
         high_amp = 6.0

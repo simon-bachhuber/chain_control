@@ -60,7 +60,6 @@ def random_double_steps_source(
     min_abs_amplitude: float = 0.0,
     max_abs_amplitude: float = 3.0,
 ):
-
     sources = []
     for seed in seeds:
         # TODO

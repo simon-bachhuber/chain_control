@@ -23,7 +23,6 @@ def cocontraction(x, center, delta):
 
 
 def load_physics_cocontraction(**physics_kwargs):
-
     center = physics_kwargs.pop("center", 0.1)
     delta = physics_kwargs.pop("delta", 0.1)
 
@@ -37,7 +36,6 @@ def load_physics_cocontraction(**physics_kwargs):
 
 
 def load_physics_asymmetric(**physics_kwargs):
-
     corner = direct = None
     if "corner" not in physics_kwargs:
         if "direct" not in physics_kwargs:
