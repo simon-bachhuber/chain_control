@@ -45,7 +45,6 @@ class ModuleActor(core.Actor):
         if self._controller:
             self._controller = self._controller.reset()
 
-        self.count = 0
         self._last_extras = None
         if self._adder:
             self._adder.reset()
@@ -63,7 +62,6 @@ class ModuleActor(core.Actor):
         pass
 
     def select_action(self, obs: Observation) -> Action:
-        self.count += 1
         self._key, consume = jrand.split(self._key)
         action = self.query_policy(to_jax(obs), consume)
         return to_numpy(action)
