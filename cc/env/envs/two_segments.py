@@ -30,6 +30,10 @@ class Color(Enum):
     LIME = "lime"
     TURQUOISE = "turquoise"
     GOLD = "gold"
+    MATPLOTLIB_GREEN = "matplotlib_green"
+    MATPLOTLIB_BLUE = "matplotlib_blue"
+    MATPLOBLIB_SALMON = "matplotlib_salmon"
+    MATPLOTLIB_LIGHTBLUE = "matplotlib_lightblue"
 
 
 @dataclass
