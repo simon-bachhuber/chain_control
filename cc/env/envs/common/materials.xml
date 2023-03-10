@@ -35,6 +35,11 @@ for example receiving a positive reward.
     <material name="lime" rgba="0.5 0.8 0.2 1"/>
     <material name="turquoise" rgba="0.25 0.88 0.82 1"/>
     <material name="gold" rgba="0.8 0.84 0.2 1"/>
+    <material name="matplotlib_green" rgba="0.0 0.502 0.0 1"/>
+    <material name="matplotlib_blue" rgba="0.012 0.263 0.8745 1"/>
+    <material name="matplotlib_lightblue" rgba="0.482 0.784 0.9647 1"/>
+    <material name="matplotlib_salmon" rgba="0.98 0.502 0.447 1"/>
+
 
   </asset>
 </mujoco>
