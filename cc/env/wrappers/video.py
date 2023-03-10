@@ -1,10 +1,11 @@
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 import dm_env
 import imageio
 from acme.utils.paths import process_path
 from acme.wrappers import EnvironmentWrapper
+from dm_control import mujoco
 from dm_control.rl.control import Environment
 
 
@@ -21,6 +22,9 @@ class VideoWrapper(EnvironmentWrapper):
         width: int = 320,
         height: int = 240,
         add_uid_to_path: bool = True,
+        scene_callback: Optional[
+            Callable[[mujoco.Physics, mujoco.MjvScene], None]
+        ] = None,
     ):
         """Wraps an Environment and records a video.
 
@@ -33,6 +37,8 @@ class VideoWrapper(EnvironmentWrapper):
                 Defaults to the first camera.
             width (int, optional): Pixel-count in width. Defaults to 320.
             height (int, optional): Pixel-count in heigth. Defaults to 240.
+            scene_callback: Called after the scene has been created and before
+                it is rendered. Can be used to add more geoms to the scene.
         """
         super().__init__(env)
         control_rate = int(1 / env.control_timestep())
@@ -41,7 +47,7 @@ class VideoWrapper(EnvironmentWrapper):
 
         self._frames = []
         self._record_every = record_every
-        self._camera_id = camera_id
+        self._camera_id = camera_id if camera_id else -1
         self._number_of_episodes = 0
         self._record_frame_every = int(control_rate / fps)
         self._env_step = 0
@@ -53,6 +59,7 @@ class VideoWrapper(EnvironmentWrapper):
         )
         self._width = width
         self._height = height
+        self._scene_callback = scene_callback
 
     def step(self, action) -> dm_env.TimeStep:
         record_episode = self._number_of_episodes % self._record_every == 0
@@ -72,14 +79,12 @@ class VideoWrapper(EnvironmentWrapper):
         return ts
 
     def _render_frame(self):
-        if self._camera_id:
-            frame = self._environment.physics.render(
-                camera_id=self._camera_id, width=self._width, height=self._height
-            )
-        else:
-            frame = self._environment.physics.render(
-                width=self._width, height=self._height
-            )
+        frame = self._environment.physics.render(
+            camera_id=self._camera_id,
+            width=self._width,
+            height=self._height,
+            scene_callback=self._scene_callback,
+        )
         return frame
 
     def _write_frames(self):
