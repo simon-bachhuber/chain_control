@@ -14,6 +14,10 @@ def _runge_kutta(rhs, t, x, dt):
 
 
 def integrate(rhs, x, t, dt, method):
+    """
+    Args:
+        rhs: (t, x) -> dx
+    """
     if method == "RK4":
         return _runge_kutta(rhs, t, x, dt)
     elif method == "EE":
