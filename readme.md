@@ -46,3 +46,11 @@ Check out the introductory notebooks located under `/docs` and the examples unde
         Let `chain_control` be the name of your conda-env, and `simon` the username.
         - Add to `.bashrc`
             `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/simon/miniforge3/envs/chain_control/lib`
+
+---
+
+    Bug: *Apple Silicon specific* : pytest does not run.
+    Solution: ray is not properly setup. Re-install grpcio
+    Steps:
+        - pip uninstall grpcio
+        - conda install grpcio
