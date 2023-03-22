@@ -41,8 +41,10 @@ setuptools.setup(
         # after installation run `pip list`
         # if dm_control==0.4345734 version, then
         # `pip install --upgrade dm_control`
-        "dm_acme[jax]",
-        "dm_acme[envs]",
+        # "dm_acme[jax]",
+        # "dm_acme[envs]",
+        "flax",
+        "dm_control",
         "cloudpickle",
         "optax",
         "scikit-learn",
