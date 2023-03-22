@@ -3,7 +3,8 @@ import time
 import jax.random as jrand
 import pytest
 import ray
-from acme import EnvironmentLoop
+
+from cc.acme import EnvironmentLoop
 
 from ...env import make_env
 from ..collect.actor import RandomActor

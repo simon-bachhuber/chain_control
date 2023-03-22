@@ -3,10 +3,12 @@ from typing import Sequence, Tuple, Union
 
 import dm_env
 import numpy as np
-from acme import EnvironmentLoop
-from acme.utils import loggers
 from tqdm.autonotebook import tqdm
 from tree_utils import tree_batch, tree_shape
+
+from cc.acme import EnvironmentLoop
+from cc.acme.utils import loggers
+from cc.acme.utils.observers import EnvLoopObserver
 
 from ...core import AbstractController
 from ...core.config import use_tqdm
@@ -14,7 +16,6 @@ from ...core.types import TimeSeriesOfAct
 from ...examples.feedforward_controller import make_feedforward_controller
 from ...utils import timestep_array_from_env, to_jax, to_numpy
 from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
-from ..loop_observer import EnvLoopObserver
 from .actor import ModuleActor
 from .source import (
     ObservationReferenceSource,
@@ -65,7 +66,7 @@ def collect(
     env: dm_env.Environment,
     controller: AbstractController,
     observers: Sequence[EnvLoopObserver] = (),
-) -> Tuple[ReplaySample, dict]:
+) -> Tuple[ReplaySample, loggers.LoggingData]:
     env.reset()
 
     buffer, adder, iterator = make_episodic_buffer_adder_iterator(

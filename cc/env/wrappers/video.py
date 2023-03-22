@@ -3,10 +3,11 @@ from typing import Callable, Optional
 
 import dm_env
 import imageio
-from acme.utils.paths import process_path
-from acme.wrappers import EnvironmentWrapper
 from dm_control import mujoco
 from dm_control.rl.control import Environment
+
+from cc.acme.utils.paths import process_path
+from cc.acme.wrappers import EnvironmentWrapper
 
 
 class VideoWrapper(EnvironmentWrapper):

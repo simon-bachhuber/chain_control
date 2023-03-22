@@ -4,8 +4,8 @@ import jax
 import jax.numpy as jnp
 import jax.random as jrand
 import optax
-from acme.utils.paths import process_path
 
+from cc.acme.utils.paths import process_path
 from cc.core import save_eqx
 from cc.env.collect import random_steps_source
 from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller

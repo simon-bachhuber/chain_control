@@ -3,7 +3,8 @@ from typing import Optional
 import dm_env
 import equinox as eqx
 import jax.random as jrand
-from acme import core
+
+from cc.acme import core
 
 from ...core import AbstractController
 from ...core.types import Action, Observation, PRNGKey

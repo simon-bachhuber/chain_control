@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import Callable, Optional, Type
 
-from acme.wrappers import SinglePrecisionWrapper
 from dm_control import mujoco
 from dm_control.rl import control
+
+from cc.acme.wrappers import SinglePrecisionWrapper
 
 
 @dataclass

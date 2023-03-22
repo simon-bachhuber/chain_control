@@ -3,7 +3,7 @@ from typing import Dict
 import dm_env
 import numpy as np
 
-from .observer import EnvLoopObserver
+from ...acme.utils.observers import EnvLoopObserver
 
 
 class AnglesEnvLoopObserver(EnvLoopObserver):

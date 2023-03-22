@@ -2,7 +2,8 @@ from collections import deque
 
 import dm_env
 import numpy as np
-from acme.wrappers import EnvironmentWrapper
+
+from cc.acme.wrappers import EnvironmentWrapper
 
 
 class DelayActionWrapper(EnvironmentWrapper):

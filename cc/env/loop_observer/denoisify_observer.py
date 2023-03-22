@@ -5,7 +5,7 @@ import numpy as np
 import tree_utils
 from dm_control.rl.control import Environment
 
-from .observer import EnvLoopObserver
+from ...acme.utils.observers import EnvLoopObserver
 
 
 class DenoisifyObserver(EnvLoopObserver):

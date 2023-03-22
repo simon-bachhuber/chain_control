@@ -3,8 +3,9 @@ from typing import Callable, Union
 import dm_env
 import equinox as eqx
 import numpy as np
-from acme.wrappers import EnvironmentWrapper
 from dm_control.rl.control import Environment
+
+from cc.acme.wrappers import EnvironmentWrapper
 
 from ...core import AbstractModel
 from ...core.types import Observation

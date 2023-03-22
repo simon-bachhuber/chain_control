@@ -2,9 +2,10 @@ from types import FunctionType
 
 import dm_env
 import numpy as np
-from acme.wrappers import EnvironmentWrapper
 from dm_control.rl.control import Environment
 from tree_utils import batch_concat, tree_slice
+
+from cc.acme.wrappers import EnvironmentWrapper
 
 from ...core import AbstractObservationReferenceSource
 from ...train.step_fn import merge_x_y

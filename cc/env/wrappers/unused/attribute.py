@@ -1,5 +1,6 @@
 import dm_env
-from acme.wrappers import EnvironmentWrapper
+
+from cc.acme.wrappers import EnvironmentWrapper
 
 
 class AttributeWrapper(EnvironmentWrapper):

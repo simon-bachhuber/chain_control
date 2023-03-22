@@ -1,6 +1,7 @@
 import dm_env
-from acme.wrappers import EnvironmentWrapper
 from tree_utils import batch_concat
+
+from cc.acme.wrappers import EnvironmentWrapper
 
 from ...utils.utils import to_numpy
 

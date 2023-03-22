@@ -1,9 +1,10 @@
 import jax.random as jrand
 import pytest
 import ray
-from acme import EnvironmentLoop
 from equinox import tree_equal
 from tree_utils import tree_slice
+
+from cc.acme import EnvironmentLoop
 
 from ...env import make_env
 from ...utils.utils import timestep_array_from_env
