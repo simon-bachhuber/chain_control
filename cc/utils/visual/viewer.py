@@ -1,8 +1,9 @@
 import copy
 
 import dm_env
-from acme import core
 from dm_control.viewer import launch
+
+from cc.acme import core
 
 from ...env.collect import ModuleActor
 
@@ -18,8 +19,9 @@ def launch_viewer(env: dm_env.Environment, actor: core.Actor, reset_every: int =
 
 def _policy_for_viewer(actor: core.Actor, reset_every: int):
     actor = copy.deepcopy(actor)
-    if actor._adder:
-        actor._adder = None
+    if hasattr(actor, "_adder"):
+        if actor._adder:
+            actor._adder = None
 
     class _policy:
         observe_first = True
