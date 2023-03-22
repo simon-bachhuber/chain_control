@@ -18,6 +18,10 @@
     
     <camera name="skyview" pos="0 -20 18" euler="50 0 0"/>
     <camera name="skyview2" pos="0 -11 6" euler="65 0 0"/>
+    <camera name="close" pos="0.012 -5.562 4.011" xyaxes="1.000 0.002 -0.000 -0.001 0.340 0.940"/>
+    <camera name="close2" pos="0.000 -6.453 3.051" xyaxes="1.000 -0.000 0.000 0.000 0.161 0.987"/>
+    <camera name="close2_tracktarget" pos="0.000 -6.453 3.051" xyaxes="1.000 -0.000 0.000 0.000 0.161 0.987" mode="targetbody" target="cart_cart"/>
+
     <!-- Cameras -->
     
     <geom name="floor" pos="0 0 -.25" size="100 100 .2" type="plane" material="grid"/>
