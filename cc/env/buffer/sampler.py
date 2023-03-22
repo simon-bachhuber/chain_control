@@ -3,7 +3,6 @@ from typing import Iterable
 import dm_env
 import jax
 import numpy as np
-from acme.jax import utils
 from tree_utils import tree_insert_IMPURE, tree_zeros_like
 
 from ...utils.utils import timestep_array_from_env
@@ -66,7 +65,7 @@ class Sampler:
     def _preallocate(self, bs, n) -> ReplaySample:
         map = jax.tree_util.tree_map
 
-        obs = utils.zeros_like(self._obs_specs)
+        obs = tree_zeros_like(self._obs_specs)
         # n+1 because of initial state after env.reset()
         obs = map(lambda arr: np.zeros((bs, n + 1, *arr.shape), arr.dtype), obs)
 
