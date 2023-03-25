@@ -32,9 +32,8 @@ class Color(Enum):
     GOLD = "gold"
     MATPLOTLIB_GREEN = "matplotlib_green"
     MATPLOTLIB_BLUE = "matplotlib_blue"
-    MATPLOBLIB_SALMON = "matplotlib_salmon"
+    MATPLOTLIB_SALMON = "matplotlib_salmon"
     MATPLOTLIB_LIGHTBLUE = "matplotlib_lightblue"
-
 
 @dataclass
 class JointParams:
@@ -50,10 +49,9 @@ class CartParams:
     hinge_joint_params: JointParams
     material: Color = Color.SELF
 
-
 @dataclass
 class Marker:
-    xpos: float
+    pos: float = 0
     material: Color = Color.SELF
 
 
@@ -102,9 +100,16 @@ def generate_camera(name: str) -> bytes:
     """.encode()
 
 
-def generate_marker(marker: Marker, i: int) -> bytes:
+def generate_marker(
+    name: str,
+    pos: float,
+    material: Color,
+) -> bytes:
+    """
+    Generates a marker.
+    """
     return rf"""
-        <geom name="x-marker{i}" type="box" pos="{marker.xpos} 0 3" size="0.1 0.2 0.2" material="{marker.material.value}" />
+        <geom name="x-marker-generated{name}" priority="1" type="box" pos="{pos} 0 3" size="0.1 0.2 0.2" material="{material.value}" />
     """.encode()
 
 
@@ -128,7 +133,8 @@ class SegmentPhysics(mujoco.Physics):
 
 
 def _load_physics(
-    cart_params: Union[List[CartParams], CartParams], markers: List[Marker]
+    cart_params: Union[List[CartParams], CartParams],
+    marker_params: Optional[List[Marker]],
 ) -> SegmentPhysics:
     """
     Creates a mujoco physics object using the provided cart parameters.
@@ -146,6 +152,7 @@ def _load_physics(
     bodies = b""
     motors = b""
     cameras = b""
+    markers = b""
 
     for cart_param in cart_params:
         bodies += generate_body(
@@ -157,10 +164,13 @@ def _load_physics(
         motors += generate_motor(cart_param.name)
         cameras += generate_camera(cart_param.name)
 
-    markers_str = b""
-
-    for i, marker in enumerate(markers):
-        markers_str += generate_marker(marker, i)
+    if marker_params:
+        for i, marker_param in enumerate(marker_params):
+            markers += generate_marker(
+                f"{i}",
+                marker_param.pos,
+                marker_param.material,
+            )
 
     # Insert bodies into template
     xml_content = xml_content.replace(b"<!-- Bodies -->", bodies)
@@ -168,8 +178,8 @@ def _load_physics(
     xml_content = xml_content.replace(b"<!-- Motors -->", motors)
     # Insert cameras into template
     xml_content = xml_content.replace(b"<!-- Cameras -->", cameras)
-    # Insert cameras into template
-    xml_content = xml_content.replace(b"<!-- Markers -->", markers_str)
+    # Insert markers into template
+    xml_content = xml_content.replace(b"<!-- Markers -->", markers)
 
     seg_phy = SegmentPhysics.from_xml_string(xml_content, assets=ASSETS)
     seg_phy.set_obs_cart_names([cart_param.name for cart_param in cart_params])
@@ -177,25 +187,30 @@ def _load_physics(
 
 
 def load_physics(
-    cart_params: Union[List[CartParams], CartParams], markers: List[Marker] = []
+    cart_params: Union[List[CartParams], CartParams],
+    marker_params: Optional[List[Marker]],
 ) -> Callable[[], mujoco.Physics]:
     def load_physics_helper():
-        return _load_physics(cart_params, markers)
+        return _load_physics(cart_params, marker_params)
 
     return load_physics_helper
 
 
 def generate_env_config(
-    cart_params: Union[List[CartParams], CartParams], markers: List[Marker] = []
+    cart_params: Union[List[CartParams], CartParams],
+    marker_params: Optional[List[Marker]] = None,
 ):
     return EnvConfig(
-        load_physics=load_physics(cart_params, markers),
+        load_physics=load_physics(cart_params, marker_params),
         task=SegmentTask,
     )
 
 
 def generate_duplicate_env_config(
-    cart_params: CartParams, num: int, materials: Optional[List[Color]] = None
+    cart_params: CartParams,
+    num: int,
+    materials: Optional[List[Color]] = None,
+    marker_params: Optional[List[Marker]] = None,
 ):
     if materials is None:
         materials = [e for e in Color]
@@ -214,7 +229,8 @@ def generate_duplicate_env_config(
                     }
                 )
                 for i, material in enumerate(materials)
-            ]
+            ],
+            marker_params,
         ),
         task=SegmentTask,
     )
