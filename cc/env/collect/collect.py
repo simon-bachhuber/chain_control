@@ -29,11 +29,16 @@ def concat_samples(*samples) -> ReplaySample:
 
 
 def sample_feedforward_and_collect(
-    env: dm_env.Environment, seeds_gp: list[int], seeds_cos: list[Union[int, float]]
+    env: dm_env.Environment,
+    seeds_gp: list[int],
+    seeds_cos: list[Union[int, float]],
+    global_scale_u: float = 1.0,
 ) -> ReplaySample:
-    _, sample_gp, _ = sample_feedforward_collect_and_make_source(env, seeds=seeds_gp)
+    _, sample_gp, _ = sample_feedforward_collect_and_make_source(
+        env, seeds=seeds_gp, global_scale_u=global_scale_u
+    )
     _, sample_cos, _ = sample_feedforward_collect_and_make_source(
-        env, draw_u_from_cosines, seeds=seeds_cos
+        env, draw_u_from_cosines, seeds=seeds_cos, global_scale_u=global_scale_u
     )
 
     return concat_samples(sample_gp, sample_cos)
@@ -92,6 +97,7 @@ def sample_feedforward_collect_and_make_source(
         0,
     ],
     observers: Sequence[EnvLoopObserver] = (),
+    global_scale_u: float = 1.0,
 ) -> Tuple[ObservationReferenceSource, ReplaySample, dict]:
     assert len(seeds) > 0
 
@@ -100,6 +106,7 @@ def sample_feedforward_collect_and_make_source(
     samples, loop_results = [], []
     for seed in seeds:
         us: TimeSeriesOfAct = to_jax(draw_fn(to_numpy(ts), seed=seed))
+        us = us * global_scale_u
         controller = make_feedforward_controller(us)
         sample, loop_result = collect(env, controller, observers)
         samples.append(sample)
