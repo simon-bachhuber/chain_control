@@ -54,6 +54,7 @@ class Env:
     physics_kwargs: dict
     noise_level: float = 0.0
     data: Optional[dict] = None
+    global_scale_u: float = 1.0
 
     @property
     def env(self):
@@ -72,7 +73,10 @@ class Env:
     def train_sample(self):
         data_config = self.data if self.data else data[self.env_id]
         sample = sample_feedforward_and_collect(
-            self.env, data_config["train_gp"], data_config["train_cos"]
+            self.env,
+            data_config["train_gp"],
+            data_config["train_cos"],
+            self.global_scale_u,
         )
         return sample
 
@@ -80,7 +84,7 @@ class Env:
     def val_sample(self):
         data_config = self.data if self.data else data[self.env_id]
         sample = sample_feedforward_and_collect(
-            self.env, data_config["val_gp"], data_config["val_cos"]
+            self.env, data_config["val_gp"], data_config["val_cos"], self.global_scale_u
         )
         return sample
 
