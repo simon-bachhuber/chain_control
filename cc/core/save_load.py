@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Callable
@@ -25,11 +26,13 @@ def save_eqx(path, trained_obj: eqx.Module, init_fn: Callable):
 
 
 def load_eqx(path):
+    path = os.path.expanduser(path)
     trained_module = load(path)
     return trained_module.load()
 
 
 def load(path):
+    path = os.path.expanduser(path)
     with open(path, "rb") as file:
         obj = cloudpickle.load(file)
     return obj
