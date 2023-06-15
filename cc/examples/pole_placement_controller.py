@@ -139,6 +139,11 @@ def make_pole_placed_controller(
         report = None
         model = pretrained_model
 
+    # this assumes that model is trained *in continuous time*
+    # TODO
+    # specify dt dynamically based on whether or not the linear
+    # model is trained in continuous time or not
+    assert kwargs.get("continuous_time", True)
     ss = ct.ss(model.A, model.B, model.C, model.D)
     if verbose:
         print("Poles of linearized plant: ", ss.poles())

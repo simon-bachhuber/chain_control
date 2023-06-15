@@ -16,7 +16,7 @@ def make_linear_model(
     output_specs: ArraySpecs,
     control_timestep: float,
     state_dim: int,
-    continuous_time: bool = False,
+    continuous_time: bool = True,
     include_D: bool = True,
     seed: int = 1,
     randomize_x0: bool = False,
