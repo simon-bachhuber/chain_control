@@ -133,7 +133,7 @@ class ModelControllerTrainer:
     def update_pbar(self, metrics: dict[str, np.ndarray]):
         s = ""
         for key, value in metrics.items():
-            s += "{}: {:10.4f} | ".format(key, float(np.mean(value)))
+            s += "{}: {:10.8f} | ".format(key, float(np.mean(value)))
         self.pbar.set_description(s)
 
     def step(self, i_step: int = 0):
