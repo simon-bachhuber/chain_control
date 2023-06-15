@@ -20,6 +20,7 @@ def make_linear_model(
     include_D: bool = True,
     seed: int = 1,
     randomize_x0: bool = False,
+    include_x0: bool = False,
 ):
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
@@ -72,7 +73,7 @@ def make_linear_model(
             filter_spec = eqx.tree_at(
                 lambda model: (model.x, model.x0, model.D),
                 filter_spec,
-                (False, False, include_D),  # both `x` and `x0` are not optimized
+                (False, include_x0, include_D),  # `x` is not optimized for
             )
             return filter_spec
 
