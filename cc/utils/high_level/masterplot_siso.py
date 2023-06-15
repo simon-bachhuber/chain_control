@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 import myplotlib
 import numpy as np
 
+from cc.acme.utils.observers import EnvLoopObserver
 from cc.acme.utils.paths import process_path
 from cc.env.collect import collect_exhaust_source
 from cc.env.collect.source import ObservationReferenceSource
-from cc.env.loop_observer import DenoisifyObserver, EnvLoopObserver
+from cc.env.loop_observer import DenoisifyObserver
 from cc.env.wrappers import (
     AddRefSignalRewardFnWrapper,
     ReplacePhysicsByModelWrapper,

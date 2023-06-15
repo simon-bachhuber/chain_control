@@ -30,7 +30,7 @@ def find_data_files(package_dir, patterns, excludes=()):
 setuptools.setup(
     name="chain_control",
     packages=setuptools.find_packages(),
-    version="0.9.0",
+    version="0.10.0",
     package_data={
         "cc": find_data_files(
             "cc", patterns=["*.xml", "*.m", "*.eqx"]
@@ -56,5 +56,6 @@ setuptools.setup(
         "tree_utils @ git+https://github.com/SimiPixel/tree_utils.git",
         "myplotlib @ git+https://github.com/SimiPixel/myplotlib.git",
         "imageio[ffmpeg]",
+        "control",
     ],
 )
