@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Callable
@@ -10,6 +11,19 @@ import equinox as eqx
 class SavedEqxModule:
     init_fn: Callable
     params_path: str
+
+    def load_thinkpad(self):
+        module = self.init_fn()
+        self.params_path = (
+            "/Users/simon/Documents/PYTHON/chain_control_plus/cdc/chain_control_folder_thinkpad/"
+            + self.params_path[26:]
+        )
+        return eqx.tree_deserialise_leaves(self.params_path, module)
+
+    def load_fifth_order(self):
+        module = self.init_fn()
+        prefix = "lcss_fifth_order_baseline/"
+        return eqx.tree_deserialise_leaves(prefix + self.params_path, module)
 
     def load(self):
         module = self.init_fn()
@@ -24,12 +38,17 @@ def save_eqx(path, trained_obj: eqx.Module, init_fn: Callable):
     save(saved_module, path + ".pkl")
 
 
-def load_eqx(path):
+def load_eqx(path, thinkpad: bool = False):
+    path = os.path.expanduser(path)
     trained_module = load(path)
-    return trained_module.load()
+    if thinkpad:
+        return trained_module.load_thinkpad()
+    else:
+        return trained_module.load()
 
 
 def load(path):
+    path = os.path.expanduser(path)
     with open(path, "rb") as file:
         obj = cloudpickle.load(file)
     return obj
