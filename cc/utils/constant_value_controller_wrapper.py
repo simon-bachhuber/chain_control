@@ -40,7 +40,7 @@ def constant_value_controller_wrapper(
 
     class ConstantValueControllerWrapper(AbstractController):
         last_action: jax.Array
-        count: int
+        count: jax.Array
         wrapped_controller: AbstractController
 
         def step(self, x):
@@ -56,9 +56,13 @@ def constant_value_controller_wrapper(
             return ConstantValueControllerWrapper(action, self.count + 1, ctrb), action
 
         def reset(self):
-            return ConstantValueControllerWrapper(_zero_action, 0, controller.reset())
+            return ConstantValueControllerWrapper(
+                _zero_action, jnp.array(0), controller.reset()
+            )
 
         def grad_filter_spec(self):
             return (False, False, controller.grad_filter_spec())
 
-    return ConstantValueControllerWrapper(_zero_action, 0, controller.reset())
+    return ConstantValueControllerWrapper(
+        _zero_action, jnp.array(0), controller.reset()
+    )

@@ -6,3 +6,4 @@ __pycache__
 *.pkl
 *.eqx
 *.DS_Store
+testing.ipynb
