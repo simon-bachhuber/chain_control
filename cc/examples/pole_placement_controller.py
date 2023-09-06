@@ -1,4 +1,5 @@
 import os
+from typing import Protocol
 
 import control as ct
 from dm_control.rl.control import PhysicsError
@@ -166,7 +167,7 @@ def make_pole_placed_controller(
     for pole in poles:
         q *= s - pole
 
-    qsoll = [v for v in q.num[0][0]]
+    qsoll = [v for v in q.num[0][0]]  # pytype: disable=attribute-error
     qsoll.insert(0, 1.0)
     qsoll = np.array(qsoll)
 
@@ -193,15 +194,15 @@ def make_pole_placed_controller(
     return init_fn, model, report
 
 
-class Search:
+class Search(Protocol):
     def query(self) -> float:
-        pass
+        ...
 
     def update(self, x, fx):
         pass
 
     def finished(self) -> bool:
-        pass
+        ...
 
 
 class ConvexSearch(Search):
