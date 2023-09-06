@@ -1,9 +1,10 @@
 from types import FunctionType
 
+from dm_control.rl.control import Environment
 import dm_env
 import numpy as np
-from dm_control.rl.control import Environment
-from tree_utils import batch_concat, tree_slice
+from tree_utils import batch_concat
+from tree_utils import tree_slice
 
 from cc.acme.wrappers import EnvironmentWrapper
 

@@ -1,7 +1,7 @@
+from equinox import tree_equal
 import jax.random as jrand
 import pytest
 import ray
-from equinox import tree_equal
 from tree_utils import tree_slice
 
 from cc.acme import EnvironmentLoop
@@ -11,7 +11,8 @@ from ...utils.utils import timestep_array_from_env
 from ..collect.actor import RandomActor
 from .adder import Adder
 from .make_buffer_adder_iterator import make_episodic_buffer_adder_iterator
-from .replay_buffer import RayReplayBuffer, buffer_to_iterator
+from .replay_buffer import buffer_to_iterator
+from .replay_buffer import RayReplayBuffer
 from .sampler import Sampler
 
 

@@ -3,13 +3,12 @@ import jax
 import jax.numpy as jnp
 import jax.random as jrand
 
-from ..core import AbstractModel, PyTree
-from ..utils import (
-    ArraySpecs,
-    batch_concat,
-    make_postprocess_fn,
-    sample_from_tree_of_specs,
-)
+from ..core import AbstractModel
+from ..core import PyTree
+from ..utils import ArraySpecs
+from ..utils import batch_concat
+from ..utils import make_postprocess_fn
+from ..utils import sample_from_tree_of_specs
 from .nn_lib.integrate import integrate
 
 

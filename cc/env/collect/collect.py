@@ -4,7 +4,8 @@ from typing import Sequence, Tuple, Union
 import dm_env
 import numpy as np
 from tqdm.autonotebook import tqdm
-from tree_utils import tree_batch, tree_shape
+from tree_utils import tree_batch
+from tree_utils import tree_shape
 
 from cc.acme import EnvironmentLoop
 from cc.acme.utils import loggers
@@ -14,14 +15,15 @@ from ...core import AbstractController
 from ...core.config import use_tqdm
 from ...core.types import TimeSeriesOfAct
 from ...examples.feedforward_controller import make_feedforward_controller
-from ...utils import timestep_array_from_env, to_jax, to_numpy
-from ..buffer import ReplaySample, make_episodic_buffer_adder_iterator
+from ...utils import timestep_array_from_env
+from ...utils import to_jax
+from ...utils import to_numpy
+from ..buffer import make_episodic_buffer_adder_iterator
+from ..buffer import ReplaySample
 from .actor import ModuleActor
-from .source import (
-    ObservationReferenceSource,
-    draw_u_from_cosines,
-    draw_u_from_gaussian_process,
-)
+from .source import draw_u_from_cosines
+from .source import draw_u_from_gaussian_process
+from .source import ObservationReferenceSource
 
 
 def concat_samples(*samples) -> ReplaySample:

@@ -2,13 +2,12 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 
-from ..core import AbstractModel, PyTree
-from ..utils import (
-    ArraySpecs,
-    batch_concat,
-    make_postprocess_fn,
-    sample_from_tree_of_specs,
-)
+from ..core import AbstractModel
+from ..core import PyTree
+from ..utils import ArraySpecs
+from ..utils import batch_concat
+from ..utils import make_postprocess_fn
+from ..utils import sample_from_tree_of_specs
 
 
 def make_linear_model(

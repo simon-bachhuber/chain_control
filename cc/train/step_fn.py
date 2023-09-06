@@ -1,6 +1,6 @@
-import functools as ft
 from collections import OrderedDict
 from dataclasses import dataclass
+import functools as ft
 from typing import Callable, Optional
 
 import equinox as eqx
@@ -8,17 +8,20 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import optax
-from tree_utils import PyTree, batch_concat, tree_batch
+from tree_utils import batch_concat
+from tree_utils import PyTree
+from tree_utils import tree_batch
 
-from ..core import AbstractController, AbstractModel
+from ..core import AbstractController
+from ..core import AbstractModel
 from ..core.module_utils import flatten_module
-from ..utils import l1_norm, l2_norm, mse
-from .minibatch import (
-    Dataloader,
-    MiniBatchState,
-    SupervisedDatasetWithWeights,
-    UnsupervisedDataset,
-)
+from ..utils import l1_norm
+from ..utils import l2_norm
+from ..utils import mse
+from .minibatch import Dataloader
+from .minibatch import MiniBatchState
+from .minibatch import SupervisedDatasetWithWeights
+from .minibatch import UnsupervisedDataset
 
 NAME_AND_VALUE = dict[str, float]
 

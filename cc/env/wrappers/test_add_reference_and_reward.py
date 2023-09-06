@@ -1,7 +1,8 @@
 from absl.testing import absltest
 from dm_env import test_utils
 
-from ...utils.utils import time_limit_from_env, timestep_array_from_env
+from ...utils.utils import time_limit_from_env
+from ...utils.utils import timestep_array_from_env
 from ..collect import sample_feedforward_collect_and_make_source
 from ..make_env import make_env
 from .add_reference_and_reward import AddRefSignalRewardFnWrapper

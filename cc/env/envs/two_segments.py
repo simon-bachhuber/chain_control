@@ -3,14 +3,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, List, Optional, Union
 
-import numpy as np
 from dm_control import mujoco
 from dm_control.rl import control
+import numpy as np
 
 from cc.env.make_env import EnvConfig
 
 from ...utils.sample_from_spec import _spec_from_observation
-from .common import ASSETS, read_model
+from .common import ASSETS
+from .common import read_model
 
 
 class Color(Enum):

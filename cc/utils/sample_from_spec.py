@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from typing import Union
 
+from dm_env import specs as dm_env_specs
 import jax
 import numpy as np
-from dm_env import specs as dm_env_specs
 
 
 def sample_action_from_action_spec(key, action_spec):

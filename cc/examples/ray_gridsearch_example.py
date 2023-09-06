@@ -2,9 +2,12 @@ from typing import Any
 
 import numpy as np
 import ray
-from ray import air, tune
+from ray import air
+from ray import tune
 
-from cc.core.config import disable_compile_warn, disable_tqdm, force_cpu_backend
+from cc.core.config import disable_compile_warn
+from cc.core.config import disable_tqdm
+from cc.core.config import force_cpu_backend
 
 
 def YOUR_FUNCTION(config: dict[str, Any]) -> float:

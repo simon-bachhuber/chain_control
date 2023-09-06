@@ -3,7 +3,9 @@ from typing import Callable, NamedTuple, Optional, Tuple, Union
 import jax
 import jax.numpy as jnp
 import numpy as np
-from tree_utils import PyTree, tree_dataloader, tree_shape
+from tree_utils import PyTree
+from tree_utils import tree_dataloader
+from tree_utils import tree_shape
 
 from ..core import PRNGKey
 from ..utils import to_jax

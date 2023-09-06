@@ -1,15 +1,16 @@
 from typing import Callable, Union
 
+from dm_control.rl.control import Environment
 import dm_env
 import equinox as eqx
 import numpy as np
-from dm_control.rl.control import Environment
 
 from cc.acme.wrappers import EnvironmentWrapper
 
 from ...core import AbstractModel
 from ...core.types import Observation
-from ...utils import to_jax, to_numpy
+from ...utils import to_jax
+from ...utils import to_numpy
 
 
 class ReplacePhysicsByModelWrapper(EnvironmentWrapper):

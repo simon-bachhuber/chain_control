@@ -1,10 +1,10 @@
 import os
 from typing import Callable, Optional
 
-import dm_env
-import imageio
 from dm_control import mujoco
 from dm_control.rl.control import Environment
+import dm_env
+import imageio
 
 from cc.acme.utils.paths import process_path
 from cc.acme.wrappers import EnvironmentWrapper

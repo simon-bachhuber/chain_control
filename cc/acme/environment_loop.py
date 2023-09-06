@@ -19,12 +19,13 @@ import time
 from typing import List, Optional, Sequence
 
 import dm_env
+from dm_env import specs
 import numpy as np
 import tree
-from dm_env import specs
 
 from cc.acme import core
-from cc.acme.utils import counting, loggers
+from cc.acme.utils import counting
+from cc.acme.utils import loggers
 from cc.acme.utils import observers as observers_lib
 
 

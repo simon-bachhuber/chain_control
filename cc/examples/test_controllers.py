@@ -1,5 +1,6 @@
 from ..env import make_env
-from ..env.collect import collect, sample_feedforward_collect_and_make_source
+from ..env.collect import collect
+from ..env.collect import sample_feedforward_collect_and_make_source
 from ..env.wrappers import AddRefSignalRewardFnWrapper
 from ..utils.utils import timestep_array_from_env
 from .feedforward_controller import make_feedforward_controller

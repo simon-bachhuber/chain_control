@@ -3,10 +3,12 @@ from typing import Iterable
 import dm_env
 import jax
 import numpy as np
-from tree_utils import tree_insert_IMPURE, tree_zeros_like
+from tree_utils import tree_insert_IMPURE
+from tree_utils import tree_zeros_like
 
 from ...utils.utils import timestep_array_from_env
-from .replay_element_sample import ReplayElement, ReplaySample
+from .replay_element_sample import ReplayElement
+from .replay_element_sample import ReplaySample
 
 
 class _TransitionAccumulation:

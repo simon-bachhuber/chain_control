@@ -1,12 +1,13 @@
 from collections import OrderedDict
 
-import numpy as np
 from dm_control import mujoco
 from dm_control.rl import control
 from dm_env import specs as dm_env_specs
+import numpy as np
 
 from ...utils.sample_from_spec import _spec_from_observation
-from .common import ASSETS, read_model
+from .common import ASSETS
+from .common import read_model
 
 
 class Physics(mujoco.Physics):

@@ -1,6 +1,7 @@
 from ...utils.utils import timestep_array_from_env
 from .adder import Adder
-from .replay_buffer import ReplayBuffer, buffer_to_iterator
+from .replay_buffer import buffer_to_iterator
+from .replay_buffer import ReplayBuffer
 from .sampler import Sampler
 
 

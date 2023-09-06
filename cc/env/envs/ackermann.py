@@ -4,10 +4,10 @@ https://www.xarg.org/book/kinematics/ackerman-steering/
 
 from collections import OrderedDict
 
-import mujoco
-import numpy as np
 from dm_control.rl import control
 from dm_env import specs
+import mujoco
+import numpy as np
 
 from ...utils.sample_from_spec import _spec_from_observation
 

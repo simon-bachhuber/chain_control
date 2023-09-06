@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
+from dm_control.rl.control import Environment
 import dm_env
 import numpy as np
 import tree_utils
-from dm_control.rl.control import Environment
 
 from ...acme.utils.observers import EnvLoopObserver
 

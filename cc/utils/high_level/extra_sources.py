@@ -1,16 +1,15 @@
 import numpy as np
 
 from cc.env import make_env
-from cc.env.collect import (
-    constant_after_transform_source,
-    double_step_source,
-    high_steps_source,
-    sample_feedforward_collect_and_make_source,
-)
+from cc.env.collect import constant_after_transform_source
+from cc.env.collect import double_step_source
+from cc.env.collect import high_steps_source
+from cc.env.collect import sample_feedforward_collect_and_make_source
 from cc.env.loop_observer import AnglesEnvLoopObserver
 from cc.env.loop_observer.ackermann_phi_observer import AckermannPhiObserver
 
-from .masterplot_siso import ExtraSource, LoopObserverConfig
+from .masterplot_siso import ExtraSource
+from .masterplot_siso import LoopObserverConfig
 
 two_segments = LoopObserverConfig(
     AnglesEnvLoopObserver(),

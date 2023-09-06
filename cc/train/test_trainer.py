@@ -3,23 +3,24 @@ import jax.random as jrand
 import optax
 
 from cc.env import make_env
-from cc.env.collect import random_steps_source, sample_feedforward_and_collect
+from cc.env.collect import random_steps_source
+from cc.env.collect import sample_feedforward_and_collect
 from cc.env.wrappers import AddRefSignalRewardFnWrapper
-from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
+from cc.examples.neural_ode_controller_compact_example import \
+    make_neural_ode_controller
 from cc.examples.neural_ode_model_compact_example import make_neural_ode_model
-from cc.train import (
-    DictLogger,
-    EvaluationMetrices,
-    ModelControllerTrainer,
-    Regularisation,
-    SupervisedDataset,
-    Tracker,
-    TrainingOptionsController,
-    TrainingOptionsModel,
-    UnsupervisedDataset,
-    make_dataloader,
-)
-from cc.utils import l2_norm, rmse
+from cc.train import DictLogger
+from cc.train import EvaluationMetrices
+from cc.train import make_dataloader
+from cc.train import ModelControllerTrainer
+from cc.train import Regularisation
+from cc.train import SupervisedDataset
+from cc.train import Tracker
+from cc.train import TrainingOptionsController
+from cc.train import TrainingOptionsModel
+from cc.train import UnsupervisedDataset
+from cc.utils import l2_norm
+from cc.utils import rmse
 
 
 def test_trainer():

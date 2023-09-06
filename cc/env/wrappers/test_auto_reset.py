@@ -1,14 +1,16 @@
 # this file is supposed to test the auto reset mechanism
 # that can be used
 
+from equinox import tree_equal
 import numpy as np
 import pytest
-from equinox import tree_equal
 
 from cc.env.sample_envs import TWO_SEGMENT_V1
 
-from ..make_env import make_env, make_unwrapped_env
-from .__init__ import AddRefSignalRewardFnWrapper, ReplacePhysicsByModelWrapper
+from ..make_env import make_env
+from ..make_env import make_unwrapped_env
+from .__init__ import AddRefSignalRewardFnWrapper
+from .__init__ import ReplacePhysicsByModelWrapper
 from .test_add_reference_and_reward import dummy_source
 from .test_replace_physics_by_model import dummy_model
 

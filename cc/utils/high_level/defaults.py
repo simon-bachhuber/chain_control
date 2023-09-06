@@ -4,8 +4,10 @@ from typing import Optional
 import optax
 
 from cc.env import make_env
-from cc.env.collect import random_steps_source, sample_feedforward_and_collect
-from cc.env.wrappers import AddRefSignalRewardFnWrapper, NoisyObservationsWrapper
+from cc.env.collect import random_steps_source
+from cc.env.collect import sample_feedforward_and_collect
+from cc.env.wrappers import AddRefSignalRewardFnWrapper
+from cc.env.wrappers import NoisyObservationsWrapper
 
 two_segments_4min = dict(
     train_gp=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],

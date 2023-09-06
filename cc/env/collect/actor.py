@@ -7,8 +7,12 @@ import jax.random as jrand
 from cc.acme import core
 
 from ...core import AbstractController
-from ...core.types import Action, Observation, PRNGKey
-from ...utils import sample_action_from_action_spec, to_jax, to_numpy
+from ...core.types import Action
+from ...core.types import Observation
+from ...core.types import PRNGKey
+from ...utils import sample_action_from_action_spec
+from ...utils import to_jax
+from ...utils import to_numpy
 from ..buffer import AbstractAdder
 
 

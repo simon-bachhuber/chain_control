@@ -6,15 +6,14 @@ import numpy as np
 from tqdm.auto import tqdm
 from tree_utils import tree_batch
 
-from ..core import AbstractController, AbstractModel
+from ..core import AbstractController
+from ..core import AbstractModel
 from ..core.config import use_tqdm
 from ..utils import to_numpy
-from .step_fn import (
-    TrainingOptionsController,
-    TrainingOptionsModel,
-    make_step_fn_controller,
-    make_step_fn_model,
-)
+from .step_fn import make_step_fn_controller
+from .step_fn import make_step_fn_model
+from .step_fn import TrainingOptionsController
+from .step_fn import TrainingOptionsModel
 
 
 class Tracker:

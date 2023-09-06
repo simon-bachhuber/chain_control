@@ -4,7 +4,7 @@
 # using `./scripts/run_tools.sh`
 
 black cc
-isort cc 
+isort --profile google cc 
 flake8
 pytype --config pytype.cfg 
 # runs `pytest`, then generates a `.coverage`

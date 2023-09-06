@@ -1,10 +1,11 @@
+from absl.testing import absltest
 import dm_env
+from dm_env import test_utils
 import numpy as np
 import pytest
-from absl.testing import absltest
-from dm_env import test_utils
 
-from ..utils.utils import time_limit_from_env, timestep_array_from_env
+from ..utils.utils import time_limit_from_env
+from ..utils.utils import timestep_array_from_env
 from .make_env import make_env
 
 LENGTH_ACTION_SEQUENCE = 2001

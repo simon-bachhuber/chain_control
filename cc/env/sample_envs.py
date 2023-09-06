@@ -1,7 +1,12 @@
 from typing import Final
 
-from .envs import ackermann, muscle, rover, two_segments
-from .envs.two_segments import CartParams, JointParams, generate_env_config
+from .envs import ackermann
+from .envs import muscle
+from .envs import rover
+from .envs import two_segments
+from .envs.two_segments import CartParams
+from .envs.two_segments import generate_env_config
+from .envs.two_segments import JointParams
 from .make_env import EnvConfig
 
 TWO_SEGMENT_V1: Final = generate_env_config(

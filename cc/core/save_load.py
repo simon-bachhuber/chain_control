@@ -1,5 +1,5 @@
-import os
 from dataclasses import dataclass
+import os
 from types import SimpleNamespace
 from typing import Callable
 

@@ -18,7 +18,8 @@ import dm_env
 import numpy as np
 import tree
 
-from cc.acme import specs, types
+from cc.acme import specs
+from cc.acme import types
 from cc.acme.wrappers import base
 
 

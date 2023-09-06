@@ -8,12 +8,11 @@ from sklearn.gaussian_process.kernels import RBF
 from tree_utils import tree_slice
 
 from ...core import AbstractObservationReferenceSource
-from ...core.types import (
-    BatchedTimeSeriesOfAct,
-    BatchedTimeSeriesOfRef,
-    TimeSeriesOfRef,
-)
-from ...utils import to_jax, to_numpy
+from ...core.types import BatchedTimeSeriesOfAct
+from ...core.types import BatchedTimeSeriesOfRef
+from ...core.types import TimeSeriesOfRef
+from ...utils import to_jax
+from ...utils import to_numpy
 
 
 class ObservationReferenceSource(AbstractObservationReferenceSource):

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Union
 
 import dm_env
-import numpy as np
 from flax import struct
+import numpy as np
 from tree_utils import PyTree
 
 

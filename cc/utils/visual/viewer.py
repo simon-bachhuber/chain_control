@@ -1,7 +1,7 @@
 import copy
 
-import dm_env
 from dm_control.viewer import launch
+import dm_env
 
 from cc.acme import core
 

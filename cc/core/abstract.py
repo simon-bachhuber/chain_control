@@ -1,14 +1,19 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Callable, Optional, Tuple
 
 import equinox as eqx
 import jax.numpy as jnp
 import jax.random as random
 import jax.tree_util as jtu
-from tree_utils import PyTree, add_batch_dim, tree_batch, tree_map_flat
+from tree_utils import add_batch_dim
+from tree_utils import PyTree
+from tree_utils import tree_batch
+from tree_utils import tree_map_flat
 
 from .module_utils import filter_scan_module
-from .types import BatchedTimeSeriesOfRef, TimeSeriesOfRef
+from .types import BatchedTimeSeriesOfRef
+from .types import TimeSeriesOfRef
 
 
 class AbstractObservationReferenceSource(ABC):

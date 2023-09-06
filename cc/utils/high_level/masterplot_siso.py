@@ -1,5 +1,5 @@
-import os
 from dataclasses import dataclass
+import os
 from typing import Callable, Optional
 
 import equinox as eqx
@@ -13,12 +13,11 @@ from cc.acme.utils.paths import process_path
 from cc.env.collect import collect_exhaust_source
 from cc.env.collect.source import ObservationReferenceSource
 from cc.env.loop_observer import DenoisifyObserver
-from cc.env.wrappers import (
-    AddRefSignalRewardFnWrapper,
-    ReplacePhysicsByModelWrapper,
-    VideoWrapper,
-)
-from cc.utils import rmse, timestep_array_from_env
+from cc.env.wrappers import AddRefSignalRewardFnWrapper
+from cc.env.wrappers import ReplacePhysicsByModelWrapper
+from cc.env.wrappers import VideoWrapper
+from cc.utils import rmse
+from cc.utils import timestep_array_from_env
 
 bbox = lambda color: dict(boxstyle="round", facecolor=color, alpha=0.35)
 colors = ["green", "blue", "orange", "brown", "red", "black"]

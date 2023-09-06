@@ -1,7 +1,7 @@
+from dm_control.rl.control import Environment
 import dm_env
 import jax
 import numpy as np
-from dm_control.rl.control import Environment
 
 from cc.acme.wrappers import EnvironmentWrapper
 

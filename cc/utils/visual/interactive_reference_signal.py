@@ -1,5 +1,9 @@
-from multiprocessing import Process, Value
-from tkinter import Button, Scale, Tk, mainloop
+from multiprocessing import Process
+from multiprocessing import Value
+from tkinter import Button
+from tkinter import mainloop
+from tkinter import Scale
+from tkinter import Tk
 
 import jax.numpy as jnp
 import jax.tree_util as jtu

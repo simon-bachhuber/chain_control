@@ -10,7 +10,8 @@ from ...env import make_env
 from ..collect.actor import RandomActor
 from .adder import Adder
 from .rate_limiting import RateLimiter
-from .replay_buffer import RayReplayBuffer, buffer_to_iterator
+from .replay_buffer import buffer_to_iterator
+from .replay_buffer import RayReplayBuffer
 from .sampler import Sampler
 
 
