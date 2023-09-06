@@ -130,6 +130,9 @@ def make_pole_placed_controller(
     pretrained_model=None,
     **kwargs,
 ):
+    """
+    NOTE: len(poles) == kwargs["state_dim"] * 2
+    """
     if pretrained_model is None:
         model_trainer = _train_linear_model(env, **kwargs)
         model = model_trainer._model

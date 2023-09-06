@@ -18,7 +18,7 @@ def make_neural_ode_model(
     output_specs: ArraySpecs,
     control_timestep: float,
     state_dim: int,
-    key,
+    key=jrand.PRNGKey(1),
     f_integrate_method: str = "RK4",
     f_use_bias: bool = True,
     f_time_invariant: bool = True,
@@ -38,6 +38,10 @@ def make_neural_ode_model(
     g_final_activation=lambda x: x,
     u_transform=lambda u: u,
 ):
+    # TODO: implement dropout; could be done using a "KeyWrapper"
+    if f_use_dropout or g_use_dropout:
+        raise NotImplementedError
+
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
     input_dim = batch_concat(toy_input, 0).size
@@ -99,8 +103,11 @@ def make_neural_ode_model(
         def reset(self):
             return NeuralOdeModel(self.f, self.g, self.init_state, self.init_state)
 
-        def step(self, u):  # u has shape identical to (`toy_input`, PRNGKey)
-            u, key = u
+        def step(self, u):
+            # TODO
+            # u has shape identical to (`toy_input`, PRNGKey)
+            # u, key = u
+            key = jrand.PRNGKey(1)
 
             # e.g. the model might saturate for large controls u
             u = u_transform(u)
@@ -111,9 +118,7 @@ def make_neural_ode_model(
                 x = self.state
                 t = jnp.array(0.0)
 
-            if f_use_dropout:
-                key, consume = jrand.split(key)
-
+            key, consume = jrand.split(key)
             if not f_time_invariant:
                 rhs = lambda t, x: self.f(batch_concat((x, t, u), 0), key=consume)
             else:
@@ -121,9 +126,7 @@ def make_neural_ode_model(
 
             x_next = integrate(rhs, x, t, control_timestep, f_integrate_method)
 
-            if g_use_dropout:
-                key, consume = jrand.split(key)
-
+            key, consume = jrand.split(key)
             if not g_time_invariant:
                 y_next = self.g(batch_concat((x_next, t), 0), key=consume)
             else:
@@ -136,10 +139,14 @@ def make_neural_ode_model(
             else:
                 state_next = x_next
 
-            return NeuralOdeModel(self.f, self.g, state_next, self.init_state), (
+            # TODO
+            out = (
                 y_next,
                 key,
             )  # y_next has shape identical to (`toy_output`, PRNGKey)
+            out = y_next
+
+            return NeuralOdeModel(self.f, self.g, state_next, self.init_state), out
 
         def grad_filter_spec(self) -> PyTree[bool]:
             filter_spec = super().grad_filter_spec()
@@ -151,12 +158,19 @@ def make_neural_ode_model(
             return filter_spec
 
         def y0(self):
-            g = eqx.tree_inference(self.g)
-            if not g_time_invariant:
-                t = jnp.array(0.0)
-                inp = batch_concat((self.init_state, t), 0)
+            # TODO; Implememnt Dropout;
+            # g = eqx.tree_inference(self.g, True)
+            g = self.g
+
+            if has_time_state:
+                x, t = self.init_state
             else:
-                inp = batch_concat((self.init_state,), 0)
+                x, t = self.init_state, jnp.array(0.0)
+
+            if not g_time_invariant:
+                inp = batch_concat((x, t), 0)
+            else:
+                inp = batch_concat(x, 0)
 
             return postprocess_fn(g(inp))
 

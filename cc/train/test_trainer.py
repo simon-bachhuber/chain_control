@@ -7,7 +7,7 @@ from cc.env.collect import random_steps_source
 from cc.env.collect import sample_feedforward_and_collect
 from cc.env.wrappers import AddRefSignalRewardFnWrapper
 from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
-from cc.examples.neural_ode_model_compact_example import make_neural_ode_model
+from cc.examples.neural_ode_model import make_neural_ode_model
 from cc.train import DictLogger
 from cc.train import EvaluationMetrices
 from cc.train import make_dataloader
@@ -44,6 +44,7 @@ def test_trainer():
         state_dim=1,
         f_depth=0,
         u_transform=jnp.arctan,
+        f_time_invariant=False,
     )
 
     model_train_dataloader = make_dataloader(

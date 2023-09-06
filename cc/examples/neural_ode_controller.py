@@ -18,7 +18,7 @@ def make_neural_ode_controller(
     output_specs: ArraySpecs,
     control_timestep: float,
     state_dim: int,
-    key,
+    key=jrand.PRNGKey(1),
     f_integrate_method: str = "RK4",
     f_use_bias: bool = True,
     f_time_invariant: bool = True,
@@ -37,6 +37,10 @@ def make_neural_ode_controller(
     g_activation=jax.nn.relu,
     g_final_activation=lambda x: x,
 ):
+    # TODO: implement dropout; could be done using a "KeyWrapper"
+    if f_use_dropout or g_use_dropout:
+        raise NotImplementedError
+
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
     input_dim = batch_concat(toy_input, 0).size
@@ -98,8 +102,11 @@ def make_neural_ode_controller(
         def reset(self):
             return NeuralOdeController(self.f, self.g, self.init_state, self.init_state)
 
-        def step(self, u):  # u has shape identical to (`toy_input`, PRNGKey)
-            u, key = u
+        def step(self, u):
+            # TODO
+            # u has shape identical to (`toy_input`, PRNGKey)
+            # u, key = u
+            key = jrand.PRNGKey(1)
 
             if has_time_state:
                 (x, t) = self.state  # pytype: disable=attribute-error
@@ -107,9 +114,7 @@ def make_neural_ode_controller(
                 x = self.state
                 t = jnp.array(0.0)
 
-            if f_use_dropout:
-                key, consume = jrand.split(key)
-
+            key, consume = jrand.split(key)
             if not f_time_invariant:
                 rhs = lambda t, x: self.f(batch_concat((x, t, u), 0), key=consume)
             else:
@@ -117,9 +122,7 @@ def make_neural_ode_controller(
 
             x_next = integrate(rhs, x, t, control_timestep, f_integrate_method)
 
-            if g_use_dropout:
-                key, consume = jrand.split(key)
-
+            key, consume = jrand.split(key)
             if not g_time_invariant:
                 y_next = self.g(batch_concat((x_next, t), 0), key=consume)
             else:
@@ -132,10 +135,14 @@ def make_neural_ode_controller(
             else:
                 state_next = x_next
 
-            return NeuralOdeController(self.f, self.g, state_next, self.init_state), (
+            # TODO
+            out = (
                 y_next,
                 key,
             )  # y_next has shape identical to (`toy_output`, PRNGKey)
+            out = y_next
+
+            return NeuralOdeController(self.f, self.g, state_next, self.init_state), out
 
         def grad_filter_spec(self) -> PyTree[bool]:
             filter_spec = super().grad_filter_spec()
