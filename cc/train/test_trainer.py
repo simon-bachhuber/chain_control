@@ -6,8 +6,7 @@ from cc.env import make_env
 from cc.env.collect import random_steps_source
 from cc.env.collect import sample_feedforward_and_collect
 from cc.env.wrappers import AddRefSignalRewardFnWrapper
-from cc.examples.neural_ode_controller_compact_example import \
-    make_neural_ode_controller
+from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
 from cc.examples.neural_ode_model_compact_example import make_neural_ode_model
 from cc.train import DictLogger
 from cc.train import EvaluationMetrices

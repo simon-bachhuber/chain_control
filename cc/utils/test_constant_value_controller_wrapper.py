@@ -8,8 +8,7 @@ from cc.env.wrappers import AddRefSignalRewardFnWrapper
 from cc.examples.linear_model import make_linear_model
 from cc.examples.pid_controller import make_pid_controller
 from cc.train.step_fn import merge_x_y
-from cc.utils.constant_value_controller_wrapper import \
-    constant_value_controller_wrapper
+from cc.utils.constant_value_controller_wrapper import constant_value_controller_wrapper
 
 
 def test_constant_value_controller_wrapper():

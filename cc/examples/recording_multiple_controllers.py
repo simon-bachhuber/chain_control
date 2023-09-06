@@ -11,10 +11,8 @@ from cc.env.envs.two_segments import JointParams
 from cc.env.envs.two_segments import Marker
 from cc.env.sample_envs import TWO_SEGMENT_V1
 from cc.env.wrappers import VideoWrapper
-from cc.env.wrappers.add_reference_and_reward import \
-    AddRefSignalRewardFnWrapper
-from cc.examples.neural_ode_controller_compact_example import \
-    make_neural_ode_controller
+from cc.env.wrappers.add_reference_and_reward import AddRefSignalRewardFnWrapper
+from cc.examples.neural_ode_controller_compact_example import make_neural_ode_controller
 from cc.utils.multiple_controller_wrapper import MultipleControllerWrapper
 
 env = make_env_from_config(TWO_SEGMENT_V1, time_limit=10.0, control_timestep=0.01)

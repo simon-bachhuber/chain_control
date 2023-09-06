@@ -3,8 +3,8 @@
 # this file should be execute from the root directory of this project
 # using `./scripts/run_tools.sh`
 
+isort --profile google cc
 black cc
-isort --profile google cc 
 flake8
 pytype --config pytype.cfg 
 # runs `pytest`, then generates a `.coverage`
