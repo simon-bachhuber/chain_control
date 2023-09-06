@@ -35,6 +35,7 @@ class Color(Enum):
     MATPLOTLIB_SALMON = "matplotlib_salmon"
     MATPLOTLIB_LIGHTBLUE = "matplotlib_lightblue"
 
+
 @dataclass
 class JointParams:
     damping: float = 0
@@ -48,6 +49,7 @@ class CartParams:
     slider_joint_params: JointParams
     hinge_joint_params: JointParams
     material: Color = Color.SELF
+
 
 @dataclass
 class Marker:
