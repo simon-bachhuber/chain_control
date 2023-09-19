@@ -36,6 +36,7 @@ def make_neural_ode_controller(
     g_depth: int = 0,
     g_activation=jax.nn.relu,
     g_final_activation=lambda x: x,
+    g_feedthrough_u: bool = False,
 ):
     # TODO: implement dropout; could be done using a "KeyWrapper"
     if f_use_dropout or g_use_dropout:
@@ -123,11 +124,12 @@ def make_neural_ode_controller(
             x_next = integrate(rhs, x, t, control_timestep, f_integrate_method)
 
             key, consume = jrand.split(key)
+            g_input = [x_next]
             if not g_time_invariant:
-                y_next = self.g(batch_concat((x_next, t), 0), key=consume)
-            else:
-                y_next = self.g(batch_concat((x_next,), 0), key=consume)
-
+                g_input.append(t)
+            if g_feedthrough_u:
+                g_input.append(u)
+            y_next = self.g(batch_concat(g_input, 0), key=consume)
             y_next = postprocess_fn(y_next)
 
             if has_time_state:
