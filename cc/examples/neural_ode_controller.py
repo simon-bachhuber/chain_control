@@ -55,6 +55,8 @@ def make_neural_ode_controller(
     g_input_dim = state_dim
     if not g_time_invariant:
         g_input_dim += 1
+    if g_feedthrough_u:
+        g_input_dim += input_dim
     g_output_dim = output_dim
 
     f_key, g_key = jrand.split(key, 2)
