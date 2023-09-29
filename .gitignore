@@ -7,3 +7,4 @@ __pycache__
 *.eqx
 *.DS_Store
 testing.ipynb
+*.ipynb_checkpoints
