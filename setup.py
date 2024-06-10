@@ -30,7 +30,7 @@ def find_data_files(package_dir, patterns, excludes=()):
 setuptools.setup(
     name="chain_control",
     packages=setuptools.find_packages(),
-    version="0.10.6",
+    version="0.10.7",
     package_data={
         "cc": find_data_files(
             "cc", patterns=["*.xml", "*.m", "*.eqx"]
@@ -53,7 +53,7 @@ setuptools.setup(
         "tqdm",
         "ipykernel",
         "ipywidgets",  # otherwise tqdm will warn
-        "tree_utils @ git+https://github.com/SimiPixel/tree_utils.git",
+        "imt-tree-utils",
         "myplotlib @ git+https://github.com/SimiPixel/myplotlib.git",
         "imageio[ffmpeg]",
         "control",
