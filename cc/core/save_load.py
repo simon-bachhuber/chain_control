@@ -19,6 +19,8 @@ class SavedEqxModule:
 
 def save_eqx(path, trained_obj: eqx.Module, init_fn: Callable):
     "path should be without file extension"
+    # pathlib.Path -> str
+    path = str(path)
     params_path = path + "_params.eqx"
     eqx.tree_serialise_leaves(params_path, trained_obj)
     saved_module = SavedEqxModule(init_fn, params_path)

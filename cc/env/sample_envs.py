@@ -1,6 +1,7 @@
 from typing import Final
 
 from .envs import ackermann
+from .envs import dummy
 from .envs import muscle
 from .envs import rover
 from .envs import two_segments
@@ -59,4 +60,5 @@ _id_accessible_envs: Final = {
     "muscle_cocontraction": EnvConfig(muscle.load_physics_cocontraction, muscle.Task),
     "rover": EnvConfig(rover.load_physics, rover.Task_Steering),
     "ackermann": EnvConfig(ackermann.Physics, ackermann.Task),
+    "dummy": EnvConfig(dummy.Physics, dummy.Task),
 }
