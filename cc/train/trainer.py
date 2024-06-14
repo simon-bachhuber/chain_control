@@ -29,7 +29,12 @@ class Tracker:
         self._associated_metric = None
         assert mode == "min"
 
+        self._i = 0
+        self._i_best = 0
+
     def report(self, model, logs):
+        self._i += 1
+
         metric = logs[self.metric_key]
 
         self.metric.append(metric)
@@ -37,12 +42,14 @@ class Tracker:
         if self._best_model is None:
             self._best_model = model
             self._associated_metric = metric
+            self._i_best = self._i
             return
 
         current_metric = np.mean(list(self.metric))
         if current_metric < self._associated_metric:
             self._associated_metric = current_metric
             self._best_model = model
+            self._i_best = self._i
 
     def best_model_or_controller(self):
         return self._best_model
@@ -52,6 +59,9 @@ class Tracker:
 
     def log_entry(self):
         return {self.metric_key: self.best_metric()}
+
+    def best_metric_i(self):
+        return self._i_best
 
 
 class Logger:
@@ -77,6 +87,20 @@ class DictLogger(Logger):
         return self._logs
 
 
+class Callback:
+    def __call__(
+        self,
+        model: None | AbstractModel,
+        controller: None | AbstractController,
+        opt_state,
+        minibatch_state,
+        logs: dict,
+        loggers: list[Logger],
+        trackers: list[Tracker],
+    ) -> None:
+        pass
+
+
 class ModelControllerTrainer:
     """Trains a `Module`, evaluates and logs it."""
 
@@ -88,6 +112,7 @@ class ModelControllerTrainer:
         controller_train_options: Optional[TrainingOptionsController] = None,
         loggers: list[Logger] = [],
         trackers: list[Tracker] = [],
+        callbacks: list[Callback] = [],
         jit: bool = True,
     ):
         assert not (
@@ -128,6 +153,7 @@ class ModelControllerTrainer:
 
         self.loggers = loggers
         self.trackers = trackers
+        self.callbacks = callbacks
 
     def update_pbar(self, metrics: dict[str, np.ndarray]):
         s = ""
@@ -150,6 +176,17 @@ class ModelControllerTrainer:
 
         logs = to_numpy(logs)
 
+        for callback in self.callbacks:
+            callback(
+                self._model,
+                self._controller,
+                self._opt_state,
+                self._minibatch_state,
+                logs,
+                self.loggers,
+                self.trackers,
+            )
+
         for logger in self.loggers:
             logger.log(logs)
 
@@ -163,7 +200,7 @@ class ModelControllerTrainer:
         self.pbar = tqdm(range(steps), disable=not use_tqdm())
         for i in self.pbar:
             logs = self.step(i)
-            self.update_pbar(logs)
+            self.update_pbar({"loss": logs["loss"]})
 
     def get_tracker_logs(self):
         logs = []

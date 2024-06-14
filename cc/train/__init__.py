@@ -3,6 +3,7 @@ from .minibatch import SupervisedDataset
 from .minibatch import SupervisedDatasetWithWeights
 from .minibatch import UnsupervisedDataset
 from .step_fn import EvaluationMetrices
+from .step_fn import EvaluationMetricesController
 from .step_fn import l1_l2_regularisers
 from .step_fn import LOSS_FN_CONTROLLER
 from .step_fn import LOSS_FN_MODEL
@@ -13,6 +14,7 @@ from .step_fn import REGU_FN
 from .step_fn import Regularisation
 from .step_fn import TrainingOptionsController
 from .step_fn import TrainingOptionsModel
+from .trainer import Callback
 from .trainer import DictLogger
 from .trainer import ModelControllerTrainer
 from .trainer import Tracker

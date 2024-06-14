@@ -11,6 +11,8 @@ import optax
 from tree_utils import batch_concat
 from tree_utils import PyTree
 from tree_utils import tree_batch
+from tree_utils import tree_ndim
+from tree_utils import tree_shape
 
 from ..core import AbstractController
 from ..core import AbstractModel
@@ -87,12 +89,12 @@ def l1_l2_regularisers(lambda_l1, lambda_l2):
 class TrainingOptionsModel:
     training_data: Dataloader
     optimizer: optax.GradientTransformation
-    metrices: tuple[
-        EvaluationMetrices
-    ] = tuple()  # pytype: disable=annotation-type-mismatch
-    regularisers: tuple[
-        Regularisation
-    ] = tuple()  # pytype: disable=annotation-type-mismatch
+    metrices: tuple[EvaluationMetrices] = (
+        tuple()
+    )  # pytype: disable=annotation-type-mismatch
+    regularisers: tuple[Regularisation] = (
+        tuple()
+    )  # pytype: disable=annotation-type-mismatch
     loss_fn: LOSS_FN_MODEL = lambda y, yhat, weights: dict(train_mse=mse(y, yhat))
 
 
@@ -189,18 +191,52 @@ def merge_x_y(x, y):
 
 
 @dataclass
+class EvaluationMetricesController:
+    refs: PyTree[jnp.ndarray]
+    model: AbstractModel
+    metrices: tuple[METRIC_FN]
+
+
+@dataclass
 class TrainingOptionsController:
     refss: Dataloader  # Batched TimeSeries of References
     optimizer: optax.GradientTransformation
-    regularisers: tuple[
-        Regularisation
-    ] = tuple()  # pytype: disable=annotation-type-mismatch
+    regularisers: tuple[Regularisation] = (
+        tuple()
+    )  # pytype: disable=annotation-type-mismatch
     merge_x_y: Callable[[PyTree, PyTree], OrderedDict] = merge_x_y
     loss_fn: LOSS_FN_CONTROLLER = lambda y, yhat: dict(train_mse=mse(y, yhat))
     loss_fn_reduce_along_models: LOSS_FN_REDUCE_ALONG_MODELS = (
         default_loss_fn_reduce_along_models
     )
     noise_scale: Optional[float] = None
+    metrices: tuple[EvaluationMetricesController] = tuple()
+
+
+def eval_metrices_controller(
+    controller: AbstractController,
+    metrices: tuple[EvaluationMetricesController],
+    noise_scale: float | None,
+    key,
+):
+    if len(metrices) == 0:
+        return {}
+
+    log_of_metrices = {}
+    for metric in metrices:
+        refss = metric.refs
+        ndim = tree_ndim(refss)
+        shape = tuple(tree_shape(refss, axis=i) for i in range(ndim))
+        assert ndim == 3, f"Must be batched so (B, T, F) not {shape}"
+        keys = jax.random.split(key, shape[0])
+        refsshat = eqx.filter_vmap(
+            controller.unroll(metric.model, merge_x_y, noise_scale)
+        )(refss, keys)
+        for metric_fn in metric.metrices:
+            this_value = metric_fn(refsshat, refss)
+            log_of_metrices.update(this_value)
+
+    return log_of_metrices
 
 
 def make_step_fn_controller(
@@ -257,7 +293,6 @@ def make_step_fn_controller(
             # steal key for simulation of noise in closed loop
             key = minibatch_state.key
             key, consume = jax.random.split(key)
-            minibatch_state = minibatch_state._replace(key=key)
 
             (loss, logs), grads = loss_fn_controller(
                 controller,
@@ -274,6 +309,14 @@ def make_step_fn_controller(
         stacked_logs = tree_batch(minibatched_logs, False, "jax")
         logs = jtu.tree_map(lambda arr: jnp.mean(arr, axis=0), stacked_logs)
 
+        # eval metrices
+        key, consume = jax.random.split(key)
+        log_of_metrices = eval_metrices_controller(
+            controller, options.metrices, options.noise_scale, consume
+        )
+        logs.update(log_of_metrices)
+
+        minibatch_state = minibatch_state._replace(key=key)
         return controller, opt_state, minibatch_state, logs
 
     opt_state = optimizer.init(eqx.filter(controller, controller.grad_filter_spec()))
