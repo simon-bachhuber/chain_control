@@ -200,7 +200,7 @@ class ModelControllerTrainer:
         self.pbar = tqdm(range(steps), disable=not use_tqdm())
         for i in self.pbar:
             logs = self.step(i)
-            self.update_pbar({"loss": logs["loss"]})
+            self.update_pbar({"train_loss": logs["train_loss"]})
 
     def get_tracker_logs(self):
         logs = []
