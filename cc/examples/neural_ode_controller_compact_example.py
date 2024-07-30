@@ -10,6 +10,7 @@ from ..utils import batch_concat
 from ..utils import make_postprocess_fn
 from ..utils import sample_from_tree_of_specs
 from .nn_lib.integrate import integrate
+from .pid_controller import make_pid_controller
 
 
 def mlp_network(
@@ -47,6 +48,8 @@ def make_neural_ode_controller(
     g_depth: int = 0,
     g_activation=jax.nn.relu,
     g_final_activation=lambda x: x,
+    superposition: bool = False,
+    superposition_trainable: bool = False,
 ):
     toy_input = sample_from_tree_of_specs(input_specs)
     toy_output = sample_from_tree_of_specs(output_specs)
@@ -58,8 +61,9 @@ def make_neural_ode_controller(
     g_input_dim = state_dim
     g_output_dim = output_dim
 
-    f_key, g_key = jrand.split(key, 2)
+    key, f_key, g_key = jrand.split(key, 3)
     init_state = jnp.zeros((state_dim,))
+    alpha0 = jnp.array(0.0)
     postprocess_fn = make_postprocess_fn(toy_output=toy_output)
 
     f_init = mlp_network(
@@ -84,11 +88,20 @@ def make_neural_ode_controller(
     class NeuralOdeController(AbstractController):
         f: eqx.Module
         g: eqx.Module
+        alpha: jnp.ndarray
+        secondary: AbstractController
         state: PyTree[jnp.ndarray]
         init_state: PyTree[jnp.ndarray]
 
         def reset(self):
-            return NeuralOdeController(self.f, self.g, self.init_state, self.init_state)
+            return NeuralOdeController(
+                self.f,
+                self.g,
+                self.alpha,
+                self.secondary.reset(),
+                self.init_state,
+                self.init_state,
+            )
 
         def step(self, u):  # u has shape identical to `toy_input`
             # f,g is time-invariant, so integration absolute time is just
@@ -97,22 +110,64 @@ def make_neural_ode_controller(
             rhs = lambda t, x: self.f(batch_concat((x, u), 0))
             x = self.state
             x_next = integrate(rhs, x, t, control_timestep, f_integrate_method)
-            y_next = self.g(batch_concat((x_next,), 0))
-            y_next = postprocess_fn(y_next)
+            y_next1 = self.g(batch_concat((x,), 0))
+            next_secondary, y_next2 = self.secondary.step(u)
+            alpha = jax.nn.sigmoid(self.alpha)
+            y_next = postprocess_fn(alpha * y_next1 + (1 - alpha) * y_next2)
             state_next = x_next
 
             return (
-                NeuralOdeController(self.f, self.g, state_next, self.init_state),
+                NeuralOdeController(
+                    self.f,
+                    self.g,
+                    self.alpha,
+                    next_secondary,
+                    state_next,
+                    self.init_state,
+                ),
                 y_next,
             )  # y_next has shape identical to `toy_output`
 
         def grad_filter_spec(self) -> PyTree[bool]:
             filter_spec = super().grad_filter_spec()
             filter_spec = eqx.tree_at(
-                lambda model: (model.state, model.init_state),
+                lambda model: (
+                    model.alpha,
+                    model.secondary,
+                    model.state,
+                    model.init_state,
+                ),
                 filter_spec,
-                (False, False),  # both `state` and `init_state` are not optimized
+                (
+                    superposition_trainable,
+                    self.secondary.grad_filter_spec(),
+                    False,
+                    False,
+                ),  # both `state` and `init_state` are not optimized
             )
             return filter_spec
 
-    return NeuralOdeController(f_init, g_init, init_state, init_state)
+    if superposition:
+        gains = jax.random.uniform(key, (3,), maxval=1.0)
+        secondary = make_pid_controller(
+            float(gains[0]), float(gains[1]) / 2, float(gains[2]) / 3, control_timestep
+        )
+    else:
+        secondary = DummyController(g_output_dim)
+
+    return NeuralOdeController(
+        f_init, g_init, alpha0, secondary, init_state, init_state
+    )
+
+
+class DummyController(AbstractController):
+    out_dim: int
+
+    def reset(self) -> AbstractController:
+        return self
+
+    def step(self, u):
+        return self, jnp.zeros((self.out_dim))
+
+    def grad_filter_spec(self) -> PyTree[bool]:
+        return False
