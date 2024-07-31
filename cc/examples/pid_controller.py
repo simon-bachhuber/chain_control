@@ -15,7 +15,13 @@ def preprocess_error_as_controller_input(x) -> jnp.ndarray:
 
 
 def make_pid_controller(
-    p_gain: float, i_gain: float, d_gain: float, control_timestep: float
+    p_gain: float,
+    i_gain: float,
+    d_gain: float,
+    control_timestep: float,
+    p_gain_trainable: bool = True,
+    i_gain_trainable: bool = True,
+    d_gain_trainable: bool = True,
 ):
     init_state = {"last_error": jnp.array([0.0]), "sum_of_errors": jnp.array([0.0])}
     init_params = {
@@ -55,6 +61,17 @@ def make_pid_controller(
 
         def grad_filter_spec(self):
             filter_spec = super().grad_filter_spec()
-            return eqx.tree_at(lambda ctrb: ctrb.state, filter_spec, False)
+            return eqx.tree_at(
+                lambda ctrb: (ctrb.state, ctrb.params),
+                filter_spec,
+                (
+                    False,
+                    {
+                        "p_gain": p_gain_trainable,
+                        "i_gain": i_gain_trainable,
+                        "d_gain": d_gain_trainable,
+                    },
+                ),
+            )
 
     return PIDController(init_state, init_params)

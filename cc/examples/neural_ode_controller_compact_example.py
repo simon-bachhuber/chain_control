@@ -148,9 +148,13 @@ def make_neural_ode_controller(
             return filter_spec
 
     if superposition:
-        gains = jax.random.uniform(key, (3,), maxval=1.0)
+        gains = jax.random.uniform(key, (2,), maxval=2.0)
         secondary = make_pid_controller(
-            float(gains[0]), float(gains[1]) / 2, float(gains[2]) / 3, control_timestep
+            float(gains[0]),
+            float(gains[1]),
+            1.0,
+            control_timestep,
+            d_gain_trainable=False,
         )
     else:
         secondary = DummyController(g_output_dim)
