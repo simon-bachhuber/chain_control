@@ -32,18 +32,24 @@ def concat_samples(*samples) -> ReplaySample:
 
 def sample_feedforward_and_collect(
     env: dm_env.Environment,
-    seeds_gp: list[int],
-    seeds_cos: list[Union[int, float]],
+    seeds_gp: list[int] = [],
+    seeds_cos: list[Union[int, float]] = [],
     global_scale_u: float = 1.0,
 ) -> ReplaySample:
-    _, sample_gp, _ = sample_feedforward_collect_and_make_source(
-        env, seeds=seeds_gp, global_scale_u=global_scale_u
-    )
-    _, sample_cos, _ = sample_feedforward_collect_and_make_source(
-        env, draw_u_from_cosines, seeds=seeds_cos, global_scale_u=global_scale_u
-    )
+    samples = []
+    if len(seeds_gp) > 0:
+        _, sample_gp, _ = sample_feedforward_collect_and_make_source(
+            env, seeds=seeds_gp, global_scale_u=global_scale_u
+        )
+        samples.append(sample_gp)
+    if len(seeds_cos) > 0:
+        _, sample_cos, _ = sample_feedforward_collect_and_make_source(
+            env, draw_u_from_cosines, seeds=seeds_cos, global_scale_u=global_scale_u
+        )
+        samples.append(sample_cos)
 
-    return concat_samples(sample_gp, sample_cos)
+    assert len(samples) > 0, "Either `seeds_gp` or `seeds_cos` must be given"
+    return concat_samples(*samples)
 
 
 def collect_exhaust_source(

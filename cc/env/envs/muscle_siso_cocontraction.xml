@@ -1,7 +1,7 @@
 <mujoco model="tiny muscle">
   <include file="./common/skybox.xml"/>
 
-  <option timestep="0.001"/>
+  <option timestep="0.001" gravity="0 -9.81 0"/>
   <size njmax="50" nconmax="10" nstack="200"/>
 
   <visual>
@@ -32,7 +32,7 @@
     <site name="x1" pos="0 0.15 0" size="0.02" rgba="0 .7 0 1" group="1"/>
 
     <body pos="0 0 0" euler="0 0 0">
-      <geom name="upper arm" type="capsule" size="0.045" fromto="0 0 0  0.5 0 0" rgba=".5 .1 .1 1"/>
+      <geom name="upper arm" type="capsule" size="0.045" fromto="0 0 0  0.5 0 0" rgba=".5 .1 .1 1" mass="0.5"/>
       <joint name="shoulder"/>
       <geom name="shoulder" type="cylinder" pos="0 0 0" size=".1 .05" rgba=".5 .1 .8 .5" mass="0" group="1"/>
 

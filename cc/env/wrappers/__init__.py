@@ -3,4 +3,5 @@ from .flat_observation import FlatObservationWrapper
 from .noisy_actions import NoisyActionsWrapper
 from .noisy_observations import NoisyObservationsWrapper
 from .replace_physics_by_model import ReplacePhysicsByModelWrapper
+from .transform import TransformWrapper
 from .video import VideoWrapper
