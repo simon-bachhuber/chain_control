@@ -14,6 +14,13 @@ def preprocess_error_as_controller_input(x) -> jnp.ndarray:
     return err
 
 
+_default_base_gains = {
+    "p_gain": jnp.array([1.0]),
+    "i_gain": jnp.array([1.0]),
+    "d_gain": jnp.array([1.0]),
+}
+
+
 def make_pid_controller(
     p_gain: float,
     i_gain: float,
@@ -22,6 +29,7 @@ def make_pid_controller(
     p_gain_trainable: bool = True,
     i_gain_trainable: bool = True,
     d_gain_trainable: bool = True,
+    base_gains: dict = _default_base_gains,
 ):
     init_state = {"last_error": jnp.array([0.0]), "sum_of_errors": jnp.array([0.0])}
     init_params = {
@@ -49,9 +57,9 @@ def make_pid_controller(
             d_term = (current_error - last_error) / control_timestep
 
             control = (
-                self.params["p_gain"] * p_term
-                + self.params["i_gain"] * i_term
-                + self.params["d_gain"] * d_term
+                self.params["p_gain"] * p_term * base_gains["p_gain"]
+                + self.params["i_gain"] * i_term * base_gains["i_gain"]
+                + self.params["d_gain"] * d_term * base_gains["d_gain"]
             )
 
             return PIDController(new_state, self.params), control

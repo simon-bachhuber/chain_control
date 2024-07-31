@@ -30,7 +30,7 @@ def find_data_files(package_dir, patterns, excludes=()):
 setuptools.setup(
     name="chain_control",
     packages=setuptools.find_packages(),
-    version="0.10.12",
+    version="0.10.13",
     package_data={
         "cc": find_data_files(
             "cc", patterns=["*.xml", "*.m", "*.eqx"]
