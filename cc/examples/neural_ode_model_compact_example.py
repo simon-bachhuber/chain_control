@@ -100,7 +100,7 @@ def make_neural_ode_model(
             rhs = lambda t, x: self.f(batch_concat((x, u), 0))
             x = self.state
             x_next = integrate(rhs, x, t, control_timestep, f_integrate_method)
-            y_next = self.g(batch_concat((x_next,), 0))
+            y_next = self.g(batch_concat((x,), 0))
             y_next = postprocess_fn(y_next)
             state_next = x_next
 

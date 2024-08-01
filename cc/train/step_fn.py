@@ -163,7 +163,9 @@ def make_step_fn_model(model: AbstractModel, options: TrainingOptionsModel):
             logs.update(dict(train_loss=loss))
             minibatched_logs.append(logs)
 
-            updates, opt_state = optimizer.update(grads, opt_state)
+            updates, opt_state = optimizer.update(
+                grads, opt_state, params=eqx.filter(model, model.grad_filter_spec())
+            )
             model = eqx.apply_updates(model, updates)
 
         # concat logs
