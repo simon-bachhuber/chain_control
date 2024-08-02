@@ -156,7 +156,7 @@ def make_neural_ode_controller(
             control_timestep,
             transform_params=lambda p: {
                 "p_gain": p["p_gain"],
-                "i_gain": jnp.array([0.0]),
+                "i_gain": p["i_gain"],
                 "d_gain": p["p_gain"] * 0.1,
             },
         )
